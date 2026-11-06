@@ -1,5 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@font-face {
+  font-family: "Playpen Sans";
+  src: url("/fonts/PlaypenSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Playpen Sans";
+  src: url("/fonts/PlaypenSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Kalam";
+  src: url("/fonts/Kalam-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
   font-family: Manrope, system-ui, sans-serif;
@@ -500,12 +521,18 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 15px;
+  margin-top: 12px;
   color: #777;
-  font: 8px 'DM Mono', monospace;
+  font: 11px 'DM Mono', monospace;
 }
 
-.discord-foot span {
+.widget-clock {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #888;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}.discord-foot span {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -934,11 +961,11 @@ button {
   margin: 0 0 35px;
 }
 
-/* Signature */
-.signature {
+/* Signature trên màn hình intro */
+.intro-screen .signature {
   z-index: 1;
   color: #fff;
-  font-family: "Cambria Math", "Times New Roman", serif;
+  font-family: "Lilita One", sans-serif;
   font-size: clamp(76px, 14vw, 150px);
   line-height: 1.3;
   white-space: nowrap;
@@ -949,7 +976,6 @@ button {
   clip-path: inset(0 100% 0 0);
   animation: signatureWrite 3s cubic-bezier(.45, 0, .25, 1) .3s forwards;
 }
-
 @keyframes signatureWrite {
   0% {
     opacity: 0;
@@ -1907,19 +1933,6 @@ body,
   padding-bottom: 42px;
 }
 
-.widget-clock {
-  position: absolute;
-  right: 16px;
-  bottom: 13px;
-
-  font-family: "DM Mono", monospace;
-  font-size: 11px;
-  color: #888;
-  opacity: 0.75;
-  letter-spacing: 0.5px;
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-}
 .profile-location {
   display: flex;
   align-items: center;
@@ -1973,4 +1986,87 @@ body,
     opacity: 1;
     transform: translateY(0);
   }
+}
+/* Discord widget footer */
+.discord-panel {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.discord-panel .discord-user {
+  margin-top: 0;
+}
+
+.discord-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  color: #777;
+  font: 11px 'DM Mono', monospace;
+}
+
+.widget-clock {
+  position: static;
+  margin: 0;
+  color: #888;
+  font: inherit;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.discord-foot > span:last-child {
+  margin-left: auto;
+}
+/* 3D tilt - entire profile card */
+.profile-card {
+  transform: perspective(1200px) rotateX(0deg) rotateY(0deg);
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
+/* ===== FONT WEBSITE ===== */
+
+/* Nội dung trang chính */
+.site-shell,
+.site-shell * {
+  font-family: "Playpen Sans", sans-serif;
+  font-weight: 700;
+}
+
+/* Giữ font DM Mono cho các thông tin kỹ thuật */
+.site-shell .topbar-right,
+.site-shell .handle,
+.site-shell .user-copy > span,
+.site-shell .discord-foot,
+.site-shell .widget-clock,
+.site-shell .eyebrow,
+.site-shell .footer,
+.site-shell .quote-credit {
+  font-family: "DM Mono", monospace;
+  font-weight: 400;
+}
+
+/* Chữ wz riêng trên trang chính */
+.site-shell .signature {
+  font-family: "Kalam", cursive !important;
+  font-weight: 700;
+}
+.brand-name {
+  font-family: "Kalam", cursive !important;
+  font-weight: 700;
+}
+/* Font chính cho toàn bộ website */
+.site-shell,
+.site-shell * {
+  font-family: "Playpen Sans", sans-serif !important;
+  font-weight: 700;
+}
+
+/* Riêng chữ WZ. dùng font Kalam */
+.site-shell .brand-name,
+.site-shell .brand-name .title-period {
+  font-family: "Kalam", cursive !important;
+  font-weight: 700;
 }

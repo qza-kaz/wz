@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
-
 import {
   Activity,
   ArrowUpRight,
@@ -21,8 +20,7 @@ import {
   siInstagram,
   siTiktok,
   siSpotify,
-  siRiotgames,
-  siDiscord
+  siRiotgames
 } from "simple-icons";
 import { config } from "./config";
 import { useLanyard } from "./useLanyard";
@@ -80,20 +78,7 @@ const formattedTime = new Intl.DateTimeFormat("en-GB", {
 
   return (
     <section className="panel discord-panel">
-      <div className="panel-heading">
-        <div className="heading-left">
-          <span className="icon-tile discord-mark">◉</span>
-          <div>
-            <p className="eyebrow">LIVE PRESENCE</p>
-            <h2>Discord</h2>
-          </div>
-        </div>
-        <span className={`live-pill ${connection === "connected" ? "is-live" : ""}`}>
-          <span />
-          {connection === "connected" ? "LIVE" : connection.toUpperCase()}
-        </span>
-      </div>
-
+      
       <div className="discord-user">
         <div className="avatar-wrap">
           <img src={avatar} alt="Discord avatar" onError={e => { e.currentTarget.src = config.avatarUrl; }} />
@@ -102,7 +87,12 @@ const formattedTime = new Intl.DateTimeFormat("en-GB", {
         <div className="user-copy">
           <strong>{user?.global_name || user?.display_name || config.displayName}</strong>
           <span>{user?.username ? `@${user.username}` : config.handle}</span>
-          <small><i style={{ background: status.color }} />{status.label}</small>
+          {status.label !== "do not disturb" && (
+  <small>
+    <i style={{ background: status.color }} />
+    {status.label}
+  </small>
+)}
         </div>
         <a className="icon-button" href={`https://discord.com/users/${config.discordUserId}`} target="_blank" rel="noreferrer" aria-label="Open Discord profile">
           <ArrowUpRight size={17} />
@@ -147,21 +137,32 @@ const formattedTime = new Intl.DateTimeFormat("en-GB", {
         </div>
       )}
 
-      <div className="discord-foot">
-        <span><Radio size={13} /> Presence via Lanyard</span>
-        <span>{presence?.active_on_discord_mobile ? "Mobile" : presence?.active_on_discord_desktop ? "Desktop" : " "}</span>
-      </div>
-
       {!presence && (
-        <p className="hint">Discord presence will appear once your account is available through Lanyard.</p>
-      )}
-<div className="widget-clock">
-  {formattedTime}
-</div>
-    </section>
+  <p className="hint">
+    Discord presence will appear once your account is available through Lanyard.
+  </p>
+)}
+
+<div className="discord-foot">
+  <span className="widget-clock">{formattedTime}</span>
+
+  <span>
+    {presence?.active_on_discord_mobile
+      ? "Mobile"
+      : presence?.active_on_discord_desktop
+        ? "Desktop"
+        : ""}
+  </span>
+</div>    </section>
   );
 }
   
+
+
+
+
+
+
 function CursorEffects() {
   const canvasRef = useRef(null);
 
@@ -170,176 +171,223 @@ function CursorEffects() {
     if (!canvas || !window.matchMedia("(pointer: fine)").matches) return;
 
     const ctx = canvas.getContext("2d");
-    let animationId;
+    if (!ctx) return;
+
+    let frame;
     let points = [];
-    let clicks = [];
+    let pointer = { x: -100, y: -100 };
+
+    const DURATION = 200;
+    const STRANDS = 11;
+    const MAX_POINTS = 150;
 
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
-
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      canvas.style.width = `${innerWidth}px`;
+      canvas.style.height = `${innerHeight}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
     const move = (e) => {
+      pointer = { x: e.clientX, y: e.clientY };
+      const last = points[points.length - 1];
+
+      if (last && Math.hypot(pointer.x - last.x, pointer.y - last.y) < 2) {
+        return;
+      }
+
       points.push({
-        x: e.clientX,
-        y: e.clientY,
-        life: 1
+        x: pointer.x,
+        y: pointer.y,
+        time: performance.now()
       });
 
-      if (points.length > 45) points.shift();
+      if (points.length > MAX_POINTS) points.shift();
     };
 
-    const click = (e) => {
-      clicks.push({
-        x: e.clientX,
-        y: e.clientY,
-        radius: 2,
-        alpha: 1
-      });
-    };
+    const draw = (now) => {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
 
-    const draw = () => {
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      points = points.filter(p => now - p.time < DURATION);
 
-      // Glowing cursor trail
-      for (let i = 1; i < points.length; i++) {
-        const a = points[i - 1];
-        const b = points[i];
-        const progress = i / points.length;
-        const alpha = progress * Math.min(a.life, b.life);
+      if (points.length > 2) {
+        const path = [];
+        let distance = 0;
 
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.lineWidth = 2.5 + progress * 4.5;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = `rgba(235, 205, 255, ${alpha * 0.8})`;
-        ctx.shadowColor = "#d99cff";
-        ctx.shadowBlur = 12;
-        ctx.stroke();
+        for (let i = 0; i < points.length; i++) {
+          if (i > 0) {
+            distance += Math.hypot(
+              points[i].x - points[i - 1].x,
+              points[i].y - points[i - 1].y
+            );
+          }
+
+          const age = now - points[i].time;
+          path.push({
+            ...points[i],
+            distance,
+            fade: Math.max(0, 1 - age / DURATION)
+          });
+        }
+
+        const center = (STRANDS - 1) / 2;
+
+        for (let s = 0; s < STRANDS; s++) {
+          ctx.beginPath();
+
+          for (let i = 1; i < path.length; i++) {
+            const p = path[i];
+            const prev = path[i - 1];
+
+            const dx = p.x - prev.x;
+            const dy = p.y - prev.y;
+            const len = Math.hypot(dx, dy) || 1;
+
+            const nx = -dy / len;
+            const ny = dx / len;
+
+            const wave =
+              Math.sin(p.distance * 0.018 - now * 0.002 + s * 0.58) * 5 +
+              Math.sin(p.distance * 0.009 - now * 0.0014 + s) * 3;
+
+            const spread = (s - center) * 1.25;
+            const offset = spread + wave;
+
+            const x = p.x + nx * offset;
+            const y = p.y + ny * offset;
+
+            if (i === 1) ctx.moveTo(x, y);
+            else {
+              const before = path[i - 1];
+              const midX = (x + before.x) / 2;
+              const midY = (y + before.y) / 2;
+              ctx.quadraticCurveTo(before.x, before.y, midX, midY);
+            }
+          }
+
+          const tailFade = path[path.length - 1].fade;
+
+          ctx.save();
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.globalAlpha = 0.35 + tailFade * 0.65;
+
+          // Soft silver glow
+          ctx.strokeStyle = "rgba(225, 232, 245, 0.45)";
+          ctx.lineWidth = s === Math.floor(center) ? 3 : 1.8;
+          ctx.shadowColor = "#ffffff";
+          ctx.shadowBlur = 12;
+          ctx.stroke();
+
+          // Fine luminous silk thread
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+          ctx.lineWidth = s === Math.floor(center) ? 1.2 : 0.65;
+          ctx.shadowBlur = 5;
+          ctx.stroke();
+
+          ctx.restore();
+        }
       }
 
-      // Bright cursor head
-      if (points.length > 0) {
-        const head = points[points.length - 1];
+      // Soft luminous cursor tip
+      const glow = ctx.createRadialGradient(
+        pointer.x, pointer.y, 0,
+        pointer.x, pointer.y, 22
+      );
 
-        ctx.beginPath();
-        ctx.arc(head.x, head.y, 4.5, 0, Math.PI * 2);
-        ctx.fillStyle = "#fff";
-        ctx.shadowColor = "#e7aaff";
-        ctx.shadowBlur = 18;
-        ctx.fill();
-      }
+      glow.addColorStop(0, "rgba(255,255,255,0.4)");
+      glow.addColorStop(0.3, "rgba(235,240,250,0.16)");
+      glow.addColorStop(1, "rgba(255,255,255,0)");
 
-      // Fade trail
-      points.forEach(point => {
-        point.life -= 0.018;
-      });
+      ctx.beginPath();
+      ctx.arc(pointer.x, pointer.y, 22, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
 
-      points = points.filter(point => point.life > 0);
-
-      // Click ripple
-      clicks.forEach(ring => {
-        ctx.beginPath();
-        ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(225, 185, 255, ${ring.alpha})`;
-        ctx.lineWidth = 2.5;
-        ctx.shadowColor = "#c78aff";
-        ctx.shadowBlur = 12;
-        ctx.stroke();
-
-        ring.radius += 1.8;
-        ring.alpha -= 0.025;
-      });
-
-      clicks = clicks.filter(ring => ring.alpha > 0);
-
-      ctx.shadowBlur = 0;
-      animationId = requestAnimationFrame(draw);
+      frame = requestAnimationFrame(draw);
     };
 
     resize();
-    draw();
+    frame = requestAnimationFrame(draw);
 
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", move);
-    window.addEventListener("click", click);
 
     return () => {
-      cancelAnimationFrame(animationId);
+      cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", move);
-      window.removeEventListener("click", click);
     };
   }, []);
 
   return <canvas ref={canvasRef} className="cursor-effects" />;
 }
-
-
-
 function App() {
+  // Discord data
   const { data, connection } = useLanyard(config.discordUserId);
+
+  // Refs
+  const musicRef = useRef(null);
+  const profileRef = useRef(null);
+
+  // States
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copiedRiot, setCopiedRiot] = useState(false);
+
+  // Discord avatar decoration
 const decorationAsset =
-  data?.discord_user?.avatar_decoration_data?.asset ||
-  data?.discord_user?.avatar_decoration ||
-  null;
+  data?.discord_user?.avatar_decoration_data?.asset;
 
 const decorationUrl = decorationAsset
   ? `https://cdn.discordapp.com/avatar-decoration-presets/${decorationAsset}.png?size=256`
-  : null;
-  const [copied, setCopied] = useState(false);
-const [copiedRiot, setCopiedRiot] = useState(false);
-  const profileRef = useRef(null);
-const musicRef = useRef(null);
-const [isPlaying, setIsPlaying] = useState(false);
-const toggleMusic = async () => {
-  if (!musicRef.current) return;
+  : "";
+  // Music
+  const toggleMusic = async () => {
+    if (!musicRef.current) return;
 
-  if (musicRef.current.paused) {
     try {
-      await musicRef.current.play();
-      setIsPlaying(true);
+      if (isPlaying) {
+        musicRef.current.pause();
+      } else {
+        await musicRef.current.play();
+      }
     } catch (error) {
-      console.log("Music playback failed:", error);
+      console.error("Music playback failed:", error);
     }
-  } else {
-    musicRef.current.pause();
-    setIsPlaying(false);
-  }
+  };
+
+  // Profile movement - 3D tilt
+const handleProfileMove = (e) => {
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  card.style.setProperty("--mouse-x", `${x}px`);
+  card.style.setProperty("--mouse-y", `${y}px`);
+
+  const rotateY = (x / rect.width - 0.5) * 10;
+  const rotateX = (0.5 - y / rect.height) * 6;
+
+  card.style.transform =
+    `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
 };
-  const handleProfileMove = (e) => {
-    const card = profileRef.current;
-    if (!card) return;
 
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
+const handleProfileLeave = (e) => {
+  const card = e.currentTarget;
 
-    const rotateY = (x - 0.5) * 10;
-    const rotateX = (0.5 - y) * 6;
+  card.style.removeProperty("--mouse-x");
+  card.style.removeProperty("--mouse-y");
 
-    card.style.transform =
-      `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-  };
-
-  const handleProfileLeave = () => {
-    if (profileRef.current) {
-      profileRef.current.style.transform =
-        "perspective(1200px) rotateX(0deg) rotateY(0deg)";
-    }
-  };
-
-  // Intro transition
-const [introVisible, setIntroVisible] = useState(true);
-const [introLeaving, setIntroLeaving] = useState(false);
-
+  card.style.transform =
+    "perspective(1200px) rotateX(0deg) rotateY(0deg)";
+};  // Intro transition
+  const [introVisible, setIntroVisible] = useState(true);
+  const [introLeaving, setIntroLeaving] = useState(false);
 const enterWebsite = () => {
   if (introLeaving) return;
 
@@ -378,15 +426,6 @@ const enterWebsite = () => {
 
   return (
   <>
-    <button
-  className="music-toggle"
-  onClick={toggleMusic}
-  aria-label={isPlaying ? "Pause music" : "Play music"}
-  title={isPlaying ? "Pause music" : "Play music"}
->
-  {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
-</button>
-
 <button
   className="music-toggle"
   onClick={toggleMusic}
@@ -494,13 +533,11 @@ const enterWebsite = () => {
     <Sparkles size={13} />
   </span>
 </div>
-              <div className="profile-info">
-                <h1>
-                  {config.displayName}
-                  <span className="title-period">.</span>
-                </h1>
-
-                <p className="handle">{config.handle}</p>
+             <div className="profile-info">
+  <h1 className="brand-name">
+    {config.displayName}
+    <span className="title-period">.</span>
+  </h1>                <p className="handle">{config.handle}</p>
 
 <div className="profile-location">
   <MapPin size={13} />
