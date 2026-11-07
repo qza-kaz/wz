@@ -106,20 +106,31 @@ const formattedTime = new Intl.DateTimeFormat("en-GB", {
         </div>
       )}
 
-      <div className="activity-box">
-        <div className="activity-icon">
-          {spotify ? <Music2 /> : game ? <Gamepad2 /> : <Activity />}
-        </div>
-        <div className="activity-copy">
-          <span className="eyebrow">CURRENT ACTIVITY</span>
-          <strong>{activityLine}</strong>
-          <small>{spotify ? spotify.artist : game?.details || otherActivity?.state || "Waiting for shared activity"}</small>
-        </div>
-        {spotify?.album_art_url && (
-          <img className="album-thumb" src={spotify.album_art_url} alt="Spotify album cover" />
-        )}
-      </div>
+      {(spotify || game || otherActivity) && (
+  <div className="activity-box">
+    <div className="activity-icon">
+      {spotify ? <Music2 /> : game ? <Gamepad2 /> : <Activity />}
+    </div>
 
+    <div className="activity-copy">
+      <span className="eyebrow">CURRENT ACTIVITY</span>
+      <strong>{activityLine}</strong>
+      <small>
+        {spotify
+          ? spotify.artist
+          : game?.details || otherActivity?.state || " "}
+      </small>
+    </div>
+
+    {spotify?.album_art_url && (
+      <img
+        className="album-thumb"
+        src={spotify.album_art_url}
+        alt="Spotify album cover"
+      />
+    )}
+  </div>
+)}
       {spotify && (
         <div className="spotify-progress">
           <div>
@@ -177,8 +188,8 @@ function CursorEffects() {
     let points = [];
     let pointer = { x: -100, y: -100 };
 
-    const DURATION = 200;
-    const STRANDS = 11;
+    const DURATION = 250;
+    const STRANDS = 5;
     const MAX_POINTS = 150;
 
     const resize = () => {
@@ -479,8 +490,7 @@ const enterWebsite = () => {
       )}
 
       {/* Main website */}
-      <main className="site-shell">
-        <div
+      <main className={`site-shell ${!introVisible ? "website-entered" : ""}`}>        <div
           className="cover"
           style={{
             backgroundImage: `linear-gradient(180deg, rgba(8,8,12,.16), #09090d 100%), url(${config.coverUrl})`
@@ -506,13 +516,13 @@ const enterWebsite = () => {
         </header>
 
         <div className="content">
-          <div
-            className="profile-card"
-            ref={profileRef}
-            onMouseMove={handleProfileMove}
-            onMouseLeave={handleProfileLeave}
-          >
-            <section className="hero">
+          <div className="profile-drop-wrap">
+  <div
+    className="profile-card"
+    ref={profileRef}
+    onMouseMove={handleProfileMove}
+    onMouseLeave={handleProfileLeave}
+  >            <section className="hero">
               <div className="hero-avatar">
   <img
     className="hero-avatar-image"
@@ -605,11 +615,11 @@ const enterWebsite = () => {
                 connection={connection}
               />
             
-            </div>
+                        </div>
           </div>
+        </div>
 
-          <footer className="footer">
-            <div className="footer-message">
+        <footer className="footer">            <div className="footer-message">
               These are our only socials. Beware of impersonators.
             </div>
 

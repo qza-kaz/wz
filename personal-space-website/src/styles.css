@@ -1,11 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
-@font-face {
-  font-family: "Playpen Sans";
-  src: url("/fonts/PlaypenSans-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-}
+
 @font-face {
   font-family: "Playpen Sans";
   src: url("/fonts/PlaypenSans-Bold.ttf") format("truetype");
@@ -18,8 +13,7 @@
   src: url("/fonts/Kalam-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
-}
-@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+}@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -2069,4 +2063,102 @@ body,
 .site-shell .brand-name .title-period {
   font-family: "Kalam", cursive !important;
   font-weight: 700;
+}
+/* Profile card drops in */
+.profile-drop-wrap {
+  opacity: 0;
+}
+
+.website-entered .profile-drop-wrap {
+  animation: dropIn 0.85s cubic-bezier(.22, .8, .25, 1) both;
+}
+
+/* Discord widget drops in second */
+.website-entered .discord-panel {
+  opacity: 0;
+  animation: dropIn 0.7s cubic-bezier(.22, .8, .25, 1) 0.75s both;
+}
+
+/* Social icons appear one by one */
+.website-entered .social-link {
+  opacity: 0;
+  animation: dropIn 0.5s cubic-bezier(.22, .8, .25, 1) both;
+}
+
+.website-entered .social-link:nth-child(1) {
+  animation-delay: 1.05s;
+}
+
+.website-entered .social-link:nth-child(2) {
+  animation-delay: 1.2s;
+}
+
+.website-entered .social-link:nth-child(3) {
+  animation-delay: 1.35s;
+}
+
+.website-entered .social-link:nth-child(4) {
+  animation-delay: 1.5s;
+}
+
+@keyframes dropIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-90px) scale(.96);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateY(8px) scale(1.01);
+  }
+
+  85% {
+    transform: translateY(-4px) scale(.995);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* Mobile: avatar trái, thông tin bên phải */
+@media (max-width: 600px) {
+  .hero {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 16px;
+  }
+
+  .hero-avatar {
+    flex: 0 0 105px;
+    width: 105px;
+    height: 105px;
+  }
+
+  .profile-info {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .profile-info h1 {
+    margin-top: 0;
+  }
+
+  .profile-location {
+    align-items: flex-start;
+  }
+
+  .social-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 14px;
+  }
+
+  .social-link svg {
+    width: 23px;
+    height: 23px;
+  }
 }
