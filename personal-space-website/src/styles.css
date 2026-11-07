@@ -2126,14 +2126,16 @@ body,
   .hero {
     display: flex !important;
     flex-direction: row !important;
-    align-items: flex-start !important;
-    gap: 16px;
+    align-items: center !important;
+    gap: 13px;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   .hero-avatar {
-    flex: 0 0 105px;
-    width: 105px;
-    height: 105px;
+    flex: 0 0 92px;
+    width: 92px;
+    height: 92px;
   }
 
   .profile-info {
@@ -2154,11 +2156,16 @@ body,
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 14px;
+    gap: 13px;
+    margin-top: 16px;
   }
 
   .social-link svg {
-    width: 23px;
-    height: 23px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .dashboard {
+    margin-top: 30px !important;
   }
 }
