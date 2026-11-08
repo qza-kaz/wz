@@ -223,69 +223,55 @@ function RiotIdCard() {
   );
 }
 
+
+
+
 function CursorEffects() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-
-    if (
-      !canvas ||
-      !window.matchMedia("(pointer: fine)").matches ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
+    if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // ===== SPRING CONFIGURATION =====
-    const TRAIL_COUNT = 1;
-    const NODE_COUNT = 42;
+    // ===== CONFIGURATION =====
+    const NODE_COUNT = 20;
+    const SPRING = 0.35;
+    const FRICTION = 0.55;
+    const DAMPENING = 0.16;
+    const TENSION = 0.98;
 
-    const FRICTION = 0.72;
-    const DAMPENING = 0.19;
-    const TENSION = 0.965;
+    const FADE_DELAY = 5000;
+    const FADE_DURATION = 450;
+    const MAX_IDLE_TIME = FADE_DELAY + FADE_DURATION;
 
-    const MAX_FRAME_DELTA = 32;
-    const STOP_THRESHOLD = 0.025;
-
-    // ===== VISUAL CONFIGURATION =====
-    const COLORS = {
-      violet: "rgba(139, 92, 246, 0.8)",
-      lavender: "rgba(167, 139, 250, 0.85)",
-      softLavender: "rgba(196, 181, 253, 0.8)",
-      white: "rgba(255, 250, 255, 0.95)"
-    };
+    const GLOW_COLOR = "#8B5CF6";
+    const LAVENDER_COLOR = "#C4B5FD";
 
     let width = window.innerWidth;
     let height = window.innerHeight;
     let dpr = 1;
 
+    let target = { x: 0, y: 0 };
+    let nodes = [];
+
+    let initialized = false;
     let animationFrame = null;
     let lastFrame = 0;
-    let initialized = false;
+    let lastMoveAt = 0;
 
-    const pointer = {
-      x: 0,
-      y: 0
-    };
-
-    // Each trail has its own spring behavior.
-    const trails = Array.from({ length: TRAIL_COUNT }, (_, index) => ({
-      spring: 0.34 + (index / TRAIL_COUNT) * 0.045,
-      friction: FRICTION + index * 0.008,
-
-      nodes: Array.from({ length: NODE_COUNT }, () => ({
-        x: 0,
-        y: 0,
+    // ===== CREATE NODES =====
+    const createNodes = (x, y) =>
+      Array.from({ length: NODE_COUNT }, () => ({
+        x,
+        y,
         vx: 0,
         vy: 0
-      }))
-    }));
+      }));
 
-    // ===== CANVAS SETUP =====
+    // ===== CANVAS RESIZE =====
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -302,22 +288,68 @@ function CursorEffects() {
       ctx.clearRect(0, 0, width, height);
     };
 
-    // ===== SMOOTH CURVE =====
-    const drawSmoothCurve = (nodes) => {
+    // ===== SPRING PHYSICS =====
+    const updateNodes = (delta) => {
+      let spring = SPRING;
+      let maxMotion = 0;
+
+      const head = nodes[0];
+
+      // First node follows the mouse.
+      head.vx += (target.x - head.x) * spring * delta;
+      head.vy += (target.y - head.y) * spring * delta;
+
+      for (let i = 0; i < nodes.length; i++) {
+        const current = nodes[i];
+
+        // Each node follows the node ahead of it.
+        if (i > 0) {
+          const previous = nodes[i - 1];
+
+          current.vx +=
+            (previous.x - current.x) * spring * delta;
+
+          current.vy +=
+            (previous.y - current.y) * spring * delta;
+
+          current.vx += previous.vx * DAMPENING * delta;
+          current.vy += previous.vy * DAMPENING * delta;
+        }
+
+        const damping = Math.pow(FRICTION, delta);
+
+        current.vx *= damping;
+        current.vy *= damping;
+
+        current.x += current.vx * delta;
+        current.y += current.vy * delta;
+
+        maxMotion = Math.max(
+          maxMotion,
+          Math.abs(current.vx),
+          Math.abs(current.vy)
+        );
+
+        // Spring force gradually decreases toward the tail.
+        spring *= TENSION;
+      }
+
+      return maxMotion;
+    };
+
+    // ===== BUILD ONE SMOOTH CURVE =====
+    const drawCurve = () => {
       if (nodes.length < 3) return;
 
       ctx.beginPath();
-
       ctx.moveTo(nodes[0].x, nodes[0].y);
 
-      let i = 1;
-
-      for (; i < nodes.length - 2; i++) {
+      for (let i = 1; i < nodes.length - 1; i++) {
         const current = nodes[i];
         const next = nodes[i + 1];
 
-        const midX = (current.x + next.x) / 2;
-        const midY = (current.y + next.y) / 2;
+        const midX = (current.x + next.x) * 0.5;
+        const midY = (current.y + next.y) * 0.5;
 
         ctx.quadraticCurveTo(
           current.x,
@@ -327,243 +359,123 @@ function CursorEffects() {
         );
       }
 
-      const p1 = nodes[i];
-      const p2 = nodes[i + 1];
+      const last = nodes[nodes.length - 1];
 
-      ctx.quadraticCurveTo(
-        p1.x,
-        p1.y,
-        p2.x,
-        p2.y
-      );
+      ctx.lineTo(last.x, last.y);
     };
 
-    // ===== DRAW ONE SPRING TRAIL =====
-    const drawTrail = (trail, index) => {
-      const nodes = trail.nodes;
-
+    // ===== DRAW COMET =====
+    const drawComet = (opacity) => {
       const head = nodes[0];
       const tail = nodes[nodes.length - 1];
 
-      const distance = Math.hypot(
-        head.x - tail.x,
-        head.y - tail.y
-      );
-
-      if (distance < 0.3) return;
-
-      const strength = 1 - index / TRAIL_COUNT;
-
-      // Gradient follows the trail direction.
       const gradient = ctx.createLinearGradient(
-        head.x,
-        head.y,
         tail.x,
-        tail.y
+        tail.y,
+        head.x,
+        head.y
       );
 
-      gradient.addColorStop(
-        0,
-        `rgba(255, 255, 255, ${0.78 * strength})`
-      );
-
-      gradient.addColorStop(
-        0.12,
-        `rgba(196, 181, 253, ${0.7 * strength})`
-      );
-
-      gradient.addColorStop(
-        0.48,
-        `rgba(167, 139, 250, ${0.38 * strength})`
-      );
-
-      gradient.addColorStop(
-        1,
-        "rgba(139, 92, 246, 0)"
-      );
+      gradient.addColorStop(0, "rgba(139,92,246,0)");
+      gradient.addColorStop(0.35, "rgba(139,92,246,0.13)");
+      gradient.addColorStop(0.72, "rgba(167,139,250,0.38)");
+      gradient.addColorStop(1, "rgba(237,230,255,0.78)");
 
       ctx.save();
 
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = opacity;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.globalCompositeOperation = "lighter";
 
-      drawSmoothCurve(nodes);
-
-      // Outer purple bloom.
-      ctx.save();
-      ctx.strokeStyle = COLORS.violet;
-      ctx.globalAlpha = 0.16 * strength;
-      ctx.lineWidth = 2.0;
-      ctx.shadowColor = "#8B5CF6";
-      ctx.shadowBlur = 15;
+      // Outer glow: same path, not an additional trail.
+      drawCurve();
+      ctx.strokeStyle = GLOW_COLOR;
+      ctx.lineWidth = 2.6;
+      ctx.shadowColor = GLOW_COLOR;
+      ctx.shadowBlur = 6;
       ctx.stroke();
-      ctx.restore();
 
-      // Main lavender trail.
-      drawSmoothCurve(nodes);
+      // Main lavender core.
+      drawCurve();
       ctx.strokeStyle = gradient;
-      ctx.globalAlpha = 0.75;
-      ctx.lineWidth = 1.9;
-      ctx.shadowColor = "#A78BFA";
-      ctx.shadowBlur = 7;
+      ctx.lineWidth = 1.15;
+      ctx.shadowColor = LAVENDER_COLOR;
+      ctx.shadowBlur = 2;
       ctx.stroke();
 
-      // Fine white-lavender center line.
-      if (index < 2) {
-        drawSmoothCurve(nodes);
-        ctx.strokeStyle = COLORS.white;
-        ctx.globalAlpha = 0.18 + strength * 0.25;
-        ctx.lineWidth = 0.7;
-        ctx.shadowColor = "#E9DDFF";
-        ctx.shadowBlur = 4;
-        ctx.stroke();
-      }
-
       ctx.restore();
-    };
-
-    // ===== SPRING PHYSICS =====
-    const updateTrail = (trail, delta) => {
-      let spring = trail.spring;
-      const nodes = trail.nodes;
-
-      const first = nodes[0];
-
-      first.vx += (pointer.x - first.x) * spring;
-      first.vy += (pointer.y - first.y) * spring;
-
-      let motion = 0;
-
-      for (let i = 0; i < nodes.length; i++) {
-        const current = nodes[i];
-
-        if (i > 0) {
-          const previous = nodes[i - 1];
-
-          current.vx +=
-            (previous.x - current.x) * spring;
-
-          current.vy +=
-            (previous.y - current.y) * spring;
-
-          current.vx += previous.vx * DAMPENING;
-          current.vy += previous.vy * DAMPENING;
-        }
-
-        current.vx *= Math.pow(trail.friction, delta);
-        current.vy *= Math.pow(trail.friction, delta);
-
-        current.x += current.vx * delta;
-        current.y += current.vy * delta;
-
-        motion = Math.max(
-          motion,
-          Math.abs(current.vx),
-          Math.abs(current.vy)
-        );
-
-        spring *= TENSION;
-      }
-
-      return motion;
-    };
-
-    // ===== CURSOR MOVEMENT =====
-    const handlePointerMove = (event) => {
-      pointer.x = event.clientX;
-      pointer.y = event.clientY;
-
-      if (!initialized) {
-        initialized = true;
-
-        trails.forEach(trail => {
-          trail.nodes.forEach(node => {
-            node.x = pointer.x;
-            node.y = pointer.y;
-            node.vx = 0;
-            node.vy = 0;
-          });
-        });
-      }
-
-      if (animationFrame === null) {
-        animationFrame = requestAnimationFrame(render);
-      }
     };
 
     // ===== RENDER LOOP =====
     const render = (now) => {
       animationFrame = null;
 
+      ctx.clearRect(0, 0, width, height);
+
+      if (!initialized || nodes.length === 0) return;
+
+      const elapsed = now - lastMoveAt;
+
+      // Stop and clear after the trail has faded.
+      if (elapsed >= MAX_IDLE_TIME) {
+        nodes = [];
+        initialized = false;
+        lastFrame = 0;
+        return;
+      }
+
       const delta = lastFrame
-        ? Math.min((now - lastFrame) / 16.67, MAX_FRAME_DELTA / 16.67)
+        ? Math.min((now - lastFrame) / 16.667, 1.5)
         : 1;
 
       lastFrame = now;
 
-      ctx.clearRect(0, 0, width, height);
+      const motion = updateNodes(delta);
 
-      let totalMotion = 0;
-
-      trails.forEach((trail, index) => {
-        const motion = updateTrail(trail, delta);
-
-        totalMotion = Math.max(totalMotion, motion);
-
-        drawTrail(trail, index);
-      });
-
-      // Sharp, tiny cursor highlight.
-      const head = trails[0].nodes[0];
-
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-
-      const headGlow = ctx.createRadialGradient(
-        head.x,
-        head.y,
+      const fadeProgress = Math.max(
         0,
-        head.x,
-        head.y,
-        5
+        (elapsed - FADE_DELAY) / FADE_DURATION
       );
 
-      headGlow.addColorStop(
-        0,
-        "rgba(255,255,255,0.95)"
-      );
+      const opacity = 1 - fadeProgress;
 
-      headGlow.addColorStop(
-        0.3,
-        "rgba(196,181,253,0.55)"
-      );
+      if (nodes.length >= 3 && opacity > 0) {
+        drawComet(opacity);
+      }
 
-      headGlow.addColorStop(
-        1,
-        "rgba(139,92,246,0)"
-      );
-
-      ctx.beginPath();
-      ctx.arc(head.x, head.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = headGlow;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(head.x, head.y, 1.15, 0, Math.PI * 2);
-      ctx.fillStyle = "#FFFFFF";
-      ctx.shadowColor = "#C4B5FD";
-      ctx.shadowBlur = 5;
-      ctx.fill();
-
-      ctx.restore();
-
-      // Stop rendering once the spring system settles.
-      if (totalMotion > STOP_THRESHOLD) {
+      // Continue only while the spring settles or the trail fades.
+      if (
+        motion > 0.008 ||
+        elapsed < MAX_IDLE_TIME
+      ) {
         animationFrame = requestAnimationFrame(render);
       } else {
         ctx.clearRect(0, 0, width, height);
+        nodes = [];
+        initialized = false;
         lastFrame = 0;
+      }
+    };
+
+    // ===== MOUSE MOVEMENT =====
+    const handleMouseMove = (event) => {
+      const x = event.clientX;
+      const y = event.clientY;
+
+      target.x = x;
+      target.y = y;
+
+      // Initialize all nodes at the first mouse position.
+      if (!initialized) {
+        nodes = createNodes(x, y);
+        initialized = true;
+      }
+
+      lastMoveAt = performance.now();
+
+      if (animationFrame === null) {
+        animationFrame = requestAnimationFrame(render);
       }
     };
 
@@ -571,7 +483,7 @@ function CursorEffects() {
     resize();
 
     window.addEventListener("resize", resize);
-    window.addEventListener("pointermove", handlePointerMove, {
+    window.addEventListener("mousemove", handleMouseMove, {
       passive: true
     });
 
@@ -582,11 +494,12 @@ function CursorEffects() {
       }
 
       window.removeEventListener("resize", resize);
-      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("mousemove", handleMouseMove);
 
-      trails.forEach(trail => {
-        trail.nodes.length = 0;
-      });
+      nodes = [];
+      initialized = false;
+
+      ctx.clearRect(0, 0, width, height);
     };
   }, []);
 

@@ -1119,27 +1119,8 @@ button {
 }
 /* =================================
    CUSTOM CURSOR
-================================= */
-
-s  
+================================= */ 
 /* ===== PREMIUM PURPLE COMET ===== */
-
-.cursor-effects {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  pointer-events: none;
-  z-index: 999999;
-}
-
-@media (pointer: coarse),
-(prefers-reduced-motion: reduce) {
-  .cursor-effects {
-    display: none;
-  }
-}
 
 /* =================================
    FLOATING WIDGETS
@@ -1500,30 +1481,6 @@ s
 
   .footer {
     font-size: 11px;
-  }
-}
-/* Cursor effects - visible above intro and signature */
-
-/* ===== COMET PARTICLE CURSOR ===== */
- {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  pointer-events: none;
-  z-index: 999999;
-}
-
-@media (pointer: coarse) {
-  .cursor-effects {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cursor-effects {
-    display: none;
   }
 }
 /* TANG KICH THUOC CHU NOI DUNG */
@@ -2576,21 +2533,6 @@ body,
   }
 }
 
-/* Cursor silk trail */
-.cursor-effects {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 999999;
-}
-
-@media (pointer: coarse) {
-  .cursor-effects {
-    display: none;
-  }
-}
 /* ===== VLR WIDGET ENTRANCE ANIMATION ===== */
 
 .website-entered .riot-id-card {
@@ -2616,5 +2558,52 @@ body,
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+.ambient-rays {
+  display: none !important;
+}
+
+/* =========================================
+   WDAFZ - PURPLE COMET CURSOR
+========================================= */
+
+/* Restore the native mouse cursor */
+html,
+body,
+#root,
+#root * {
+  cursor: auto !important;
+}
+
+a,
+button,
+[role="button"] {
+  cursor: pointer !important;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  cursor: text !important;
+}
+
+/* Purple comet canvas */
+canvas.cursor-effects {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  z-index: 999999 !important;
+}
+
+/* Disable trail only when reduced motion is requested */
+@media (prefers-reduced-motion: reduce) {
+  canvas.cursor-effects {
+    display: none !important;
   }
 }
