@@ -39,23 +39,6 @@ const socialIcons = {
   Riot: siRiotgames,
 };
 function DiscordCard({ presence, connection }) {
-const [currentTime, setCurrentTime] = useState(new Date());
-
-useEffect(() => {
-  const timer = setInterval(() => {
-    setCurrentTime(new Date());
-  }, 1000);
-
-  return () => clearInterval(timer);
-}, []);
-
-const formattedTime = new Intl.DateTimeFormat("en-GB", {
-  timeZone: "Asia/Ho_Chi_Minh",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false
-}).format(currentTime);
   const user = presence?.discord_user;
   const status = statusMap[presence?.discord_status || "offline"];
   const activities = presence?.activities || [];
@@ -77,36 +60,55 @@ const formattedTime = new Intl.DateTimeFormat("en-GB", {
         : "No activity shared right now";
 
   return (
-    <section className="panel discord-panel">
-      
-      <div className="discord-user">
-        <div className="avatar-wrap">
-          <img src={avatar} alt="Discord avatar" onError={e => { e.currentTarget.src = config.avatarUrl; }} />
-          <i className="status-dot" style={{ background: status.color }} />
-        </div>
-        <div className="user-copy">
-          <strong>{user?.global_name || user?.display_name || config.displayName}</strong>
-          <span>{user?.username ? `@${user.username}` : config.handle}</span>
-          {status.label !== "do not disturb" && (
-  <small>
-    <i style={{ background: status.color }} />
-    {status.label}
-  </small>
-)}
-        </div>
-        <a className="icon-button" href={`https://discord.com/users/${config.discordUserId}`} target="_blank" rel="noreferrer" aria-label="Open Discord profile">
-          <ArrowUpRight size={17} />
-        </a>
-      </div>
+    
+<section className="panel discord-panel">
 
-      {custom?.state && (
-        <div className="custom-status">
-          <span>{custom.emoji?.name || "✦"}</span>
-          {custom.state}
-        </div>
+  <div className="discord-user">
+
+    {/* Discord avatar */}
+    <div className="avatar-wrap">
+      <img
+        src={avatar}
+        alt="Discord avatar"
+        onError={e => {
+          e.currentTarget.src = config.avatarUrl;
+        }}
+      />
+      <i
+        className="status-dot"
+        style={{ background: status.color }}
+      />
+    </div>
+
+    {/* Discord user information */}
+    <div className="user-copy">
+      <strong>
+        {user?.global_name || user?.display_name || config.displayName}
+      </strong>
+
+      <span>
+        {user?.username ? `@${user.username}` : config.handle}
+      </span>
+
+      <a
+        className="discord-view-profile"
+        href={`https://discord.com/users/${config.discordUserId}`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        VIEW PROFILE
+      </a>
+
+      {status.label !== "do not disturb" && (
+        <small>
+          <i style={{ background: status.color }} />
+          {status.label}
+        </small>
       )}
+    </div>
 
-      {(spotify || game || otherActivity) && (
+  </div>
+            {(spotify || game || otherActivity) && (
   <div className="activity-box">
     <div className="activity-icon">
       {spotify ? <Music2 /> : game ? <Gamepad2 /> : <Activity />}
@@ -154,26 +156,70 @@ const formattedTime = new Intl.DateTimeFormat("en-GB", {
   </p>
 )}
 
-<div className="discord-foot">
-  <span className="widget-clock">{formattedTime}</span>
-
-  <span>
-    {presence?.active_on_discord_mobile
-      ? "Mobile"
-      : presence?.active_on_discord_desktop
-        ? "Desktop"
-        : ""}
-  </span>
-</div>    </section>
+    </section>
   );
 }
-  
+ 
+function ProfileCardFooter({ presence }) {
+  const [currentTime, setCurrentTime] = useState(new Date());
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
 
+    return () => clearInterval(timer);
+  }, []);
 
+  const formattedTime = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).format(currentTime);
 
+  const device = presence?.active_on_discord_mobile
+    ? "Mobile"
+    : presence?.active_on_discord_desktop
+      ? "Desktop"
+      : "";
 
+  return (
+    <div className="discord-foot profile-card-foot">
+      <span className="widget-clock">
+        {formattedTime} GMT+7
+      </span>
 
+      <span>{device}</span>
+    </div>
+  );
+}
+
+function RiotIdCard() {
+  return (
+    <a
+      className="riot-id-card"
+      href="https://tracker.gg/valorant/profile/riot/wza%232502/overview"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="View wza#2502 on Valorant Tracker"
+    >
+      <div className="riot-id-logo riot-id-clove-wrap">
+  <img
+    className="riot-id-clove"
+    src="https://valo.town/assets/images/agents/1dbf2edd-4729-0984-3115-daa5eed44993/displayiconsmall.png"
+    alt="Clove VALORANT"
+  />
+</div>      <div className="riot-id-info">
+        <span className="riot-id-label">VALORANT</span>
+        <strong>wza</strong>
+      </div>
+
+      <span className="riot-id-tag">RIOT ID</span>
+    </a>
+  );
+}
 function CursorEffects() {
   const canvasRef = useRef(null);
 
@@ -465,9 +511,8 @@ const enterWebsite = () => {
       </video>
 
       <div className="background-overlay" />
-
-      <CursorEffects />
-
+<div className="ambient-rays" />
+<CursorEffects />
       {/* Intro screen */}
       {introVisible && (
         <div
@@ -610,13 +655,15 @@ const enterWebsite = () => {
             </section>
 
             <div className="dashboard">
-              <DiscordCard
-                presence={data}
-                connection={connection}
-              />
-            
-                        </div>
-          </div>
+  <DiscordCard
+    presence={data}
+    connection={connection}
+  />
+
+  <RiotIdCard />
+</div>
+
+<ProfileCardFooter presence={data} />        </div>
         </div>
 
         <footer className="footer">            <div className="footer-message">
