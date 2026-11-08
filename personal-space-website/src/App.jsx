@@ -241,7 +241,7 @@ function CursorEffects() {
     if (!ctx) return;
 
     // ===== SPRING CONFIGURATION =====
-    const TRAIL_COUNT = 6;
+    const TRAIL_COUNT = 1;
     const NODE_COUNT = 42;
 
     const FRICTION = 0.72;
@@ -394,7 +394,7 @@ function CursorEffects() {
       ctx.save();
       ctx.strokeStyle = COLORS.violet;
       ctx.globalAlpha = 0.16 * strength;
-      ctx.lineWidth = 4.2;
+      ctx.lineWidth = 2.0;
       ctx.shadowColor = "#8B5CF6";
       ctx.shadowBlur = 15;
       ctx.stroke();
