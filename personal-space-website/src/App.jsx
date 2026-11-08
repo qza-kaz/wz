@@ -110,9 +110,19 @@ function DiscordCard({ presence, connection }) {
   </div>
             {(spotify || game || otherActivity) && (
   <div className="activity-box">
-    <div className="activity-icon">
-      {spotify ? <Music2 /> : game ? <Gamepad2 /> : <Activity />}
-    </div>
+
+    {/* Album bên trái khi nghe Spotify */}
+    {spotify?.album_art_url ? (
+      <img
+        className="album-thumb"
+        src={spotify.album_art_url}
+        alt="Spotify album cover"
+      />
+    ) : (
+      <div className="activity-icon">
+        {game ? <Gamepad2 /> : <Activity />}
+      </div>
+    )}
 
     <div className="activity-copy">
       <span className="eyebrow">CURRENT ACTIVITY</span>
@@ -124,16 +134,8 @@ function DiscordCard({ presence, connection }) {
       </small>
     </div>
 
-    {spotify?.album_art_url && (
-      <img
-        className="album-thumb"
-        src={spotify.album_art_url}
-        alt="Spotify album cover"
-      />
-    )}
   </div>
-)}
-      {spotify && (
+)}      {spotify && (
         <div className="spotify-progress">
           <div>
             <span>{spotify.song}</span>
@@ -220,166 +222,421 @@ function RiotIdCard() {
     </a>
   );
 }
+
+
 function CursorEffects() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !window.matchMedia("(pointer: fine)").matches) return;
+
+    const finePointer = window.matchMedia("(pointer: fine)");
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    if (!canvas || !finePointer.matches || reducedMotion.matches) {
+      return;
+    }
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let frame;
+    // Visual configuration
+    const MAX_AGE = 480;
+    const MAX_POINTS = 100;
+    const MAX_WIDTH = 10;
+    const SMOOTHING = 50;
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+
     let points = [];
-    let pointer = { x: -100, y: -100 };
+    let animationFrame = null;
+    let lastFrame = 0;
 
-    const DURATION = 250;
-    const STRANDS = 5;
-    const MAX_POINTS = 150;
+    let pointer = {
+      x: 0,
+      y: 0,
+      lastMove: 0,
+      initialized: false
+    };
 
+    let head = { x: 0, y: 0 };
+
+    const clamp = (value, min = 0, max = 1) =>
+      Math.max(min, Math.min(max, value));
+
+    // Canvas high-DPI setup
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = innerWidth * dpr;
-      canvas.height = innerHeight * dpr;
-      canvas.style.width = `${innerWidth}px`;
-      canvas.style.height = `${innerHeight}px`;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    const move = (e) => {
-      pointer = { x: e.clientX, y: e.clientY };
-      const last = points[points.length - 1];
-
-      if (last && Math.hypot(pointer.x - last.x, pointer.y - last.y) < 2) {
-        return;
+    const requestRender = () => {
+      if (animationFrame === null) {
+        animationFrame = requestAnimationFrame(render);
       }
-
-      points.push({
-        x: pointer.x,
-        y: pointer.y,
-        time: performance.now()
-      });
-
-      if (points.length > MAX_POINTS) points.shift();
     };
 
-    const draw = (now) => {
-      ctx.clearRect(0, 0, innerWidth, innerHeight);
+    // Receive cursor movement
+    const handlePointerMove = (event) => {
+      const x = event.clientX;
+      const y = event.clientY;
+      const now = performance.now();
 
-      points = points.filter(p => now - p.time < DURATION);
+      if (!pointer.initialized) {
+        pointer.initialized = true;
 
-      if (points.length > 2) {
-        const path = [];
-        let distance = 0;
+        pointer.x = x;
+        pointer.y = y;
 
-        for (let i = 0; i < points.length; i++) {
-          if (i > 0) {
-            distance += Math.hypot(
-              points[i].x - points[i - 1].x,
-              points[i].y - points[i - 1].y
+        head.x = x;
+        head.y = y;
+
+        points.push({ x, y, time: now });
+      }
+
+      pointer.x = x;
+      pointer.y = y;
+      pointer.lastMove = now;
+
+      requestRender();
+    };
+
+    const handlePointerLeave = () => {
+      pointer.lastMove = performance.now() - 180;
+      requestRender();
+    };
+
+    // Catmull-Rom interpolation for a smooth curved path
+    const getSmoothPath = (source) => {
+      if (source.length < 2) return [];
+
+      const result = [];
+      const SUBDIVISIONS = 4;
+
+      for (let i = 0; i < source.length - 1; i++) {
+        const p0 = source[Math.max(0, i - 1)];
+        const p1 = source[i];
+        const p2 = source[i + 1];
+        const p3 = source[Math.min(source.length - 1, i + 2)];
+
+        for (let step = 0; step < SUBDIVISIONS; step++) {
+          const t = step / SUBDIVISIONS;
+          const t2 = t * t;
+          const t3 = t2 * t;
+
+          const interpolate = (a, b, c, d) =>
+            0.5 * (
+              2 * b +
+              (-a + c) * t +
+              (2 * a - 5 * b + 4 * c - d) * t2 +
+              (-a + 3 * b - 3 * c + d) * t3
             );
-          }
 
-          const age = now - points[i].time;
-          path.push({
-            ...points[i],
-            distance,
-            fade: Math.max(0, 1 - age / DURATION)
+          result.push({
+            x: interpolate(p0.x, p1.x, p2.x, p3.x),
+            y: interpolate(p0.y, p1.y, p2.y, p3.y),
+            time: p1.time + (p2.time - p1.time) * t
           });
-        }
-
-        const center = (STRANDS - 1) / 2;
-
-        for (let s = 0; s < STRANDS; s++) {
-          ctx.beginPath();
-
-          for (let i = 1; i < path.length; i++) {
-            const p = path[i];
-            const prev = path[i - 1];
-
-            const dx = p.x - prev.x;
-            const dy = p.y - prev.y;
-            const len = Math.hypot(dx, dy) || 1;
-
-            const nx = -dy / len;
-            const ny = dx / len;
-
-            const wave =
-              Math.sin(p.distance * 0.018 - now * 0.002 + s * 0.58) * 5 +
-              Math.sin(p.distance * 0.009 - now * 0.0014 + s) * 3;
-
-            const spread = (s - center) * 1.25;
-            const offset = spread + wave;
-
-            const x = p.x + nx * offset;
-            const y = p.y + ny * offset;
-
-            if (i === 1) ctx.moveTo(x, y);
-            else {
-              const before = path[i - 1];
-              const midX = (x + before.x) / 2;
-              const midY = (y + before.y) / 2;
-              ctx.quadraticCurveTo(before.x, before.y, midX, midY);
-            }
-          }
-
-          const tailFade = path[path.length - 1].fade;
-
-          ctx.save();
-          ctx.lineCap = "round";
-          ctx.lineJoin = "round";
-          ctx.globalAlpha = 0.35 + tailFade * 0.65;
-
-          // Soft silver glow
-          ctx.strokeStyle = "rgba(225, 232, 245, 0.45)";
-          ctx.lineWidth = s === Math.floor(center) ? 3 : 1.8;
-          ctx.shadowColor = "#ffffff";
-          ctx.shadowBlur = 12;
-          ctx.stroke();
-
-          // Fine luminous silk thread
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-          ctx.lineWidth = s === Math.floor(center) ? 1.2 : 0.65;
-          ctx.shadowBlur = 5;
-          ctx.stroke();
-
-          ctx.restore();
         }
       }
 
-      // Soft luminous cursor tip
-      const glow = ctx.createRadialGradient(
-        pointer.x, pointer.y, 0,
-        pointer.x, pointer.y, 22
+      result.push(source[source.length - 1]);
+
+      return result;
+    };
+
+    // Draw a tapered ribbon
+    const drawRibbon = (path, now, fade) => {
+      if (path.length < 3 || fade <= 0) return;
+
+      const left = [];
+      const right = [];
+      const coreLeft = [];
+      const coreRight = [];
+
+      let headNormal = { x: 0, y: 1 };
+
+      for (let i = 0; i < path.length; i++) {
+        const previous = path[Math.max(0, i - 1)];
+        const next = path[Math.min(path.length - 1, i + 1)];
+
+        const dx = next.x - previous.x;
+        const dy = next.y - previous.y;
+        const length = Math.hypot(dx, dy) || 1;
+
+        const nx = -dy / length;
+        const ny = dx / length;
+
+        if (i === path.length - 1) {
+          headNormal = { x: nx, y: ny };
+        }
+
+        const progress = i / (path.length - 1);
+        const age = now - path[i].time;
+        const ageFade = clamp(1 - age / MAX_AGE);
+
+        // Narrow at the tail, wider near the head
+        const taper = Math.pow(progress, 1.25);
+        const halfWidth =
+          (0.04 + MAX_WIDTH * taper) *
+          Math.pow(ageFade, 0.75);
+
+        left.push({
+          x: path[i].x + nx * halfWidth,
+          y: path[i].y + ny * halfWidth
+        });
+
+        right.push({
+          x: path[i].x - nx * halfWidth,
+          y: path[i].y - ny * halfWidth
+        });
+
+        const coreWidth = halfWidth * 0.24;
+
+        coreLeft.push({
+          x: path[i].x + nx * coreWidth,
+          y: path[i].y + ny * coreWidth
+        });
+
+        coreRight.push({
+          x: path[i].x - nx * coreWidth,
+          y: path[i].y - ny * coreWidth
+        });
+      }
+
+      const buildRibbon = (a, b) => {
+        const shape = new Path2D();
+
+        shape.moveTo(a[0].x, a[0].y);
+
+        for (let i = 1; i < a.length; i++) {
+          shape.lineTo(a[i].x, a[i].y);
+        }
+
+        for (let i = b.length - 1; i >= 0; i--) {
+          shape.lineTo(b[i].x, b[i].y);
+        }
+
+        shape.closePath();
+
+        return shape;
+      };
+
+      const tail = path[0];
+      const tip = path[path.length - 1];
+
+      // Gradient across the width of the comet
+      const gradientStart = {
+        x: tip.x - headNormal.x * MAX_WIDTH,
+        y: tip.y - headNormal.y * MAX_WIDTH
+      };
+
+      const gradientEnd = {
+        x: tip.x + headNormal.x * MAX_WIDTH,
+        y: tip.y + headNormal.y * MAX_WIDTH
+      };
+
+      const gradient = ctx.createLinearGradient(
+        gradientStart.x,
+        gradientStart.y,
+        gradientEnd.x,
+        gradientEnd.y
       );
 
-      glow.addColorStop(0, "rgba(255,255,255,0.4)");
-      glow.addColorStop(0.3, "rgba(235,240,250,0.16)");
-      glow.addColorStop(1, "rgba(255,255,255,0)");
+      gradient.addColorStop(0, "rgba(139,92,246,0)");
+      gradient.addColorStop(0.18, "rgba(139,92,246,0.22)");
+      gradient.addColorStop(0.36, "rgba(167,139,250,0.62)");
+      gradient.addColorStop(0.5, "rgba(255,250,255,0.95)");
+      gradient.addColorStop(0.64, "rgba(196,181,253,0.62)");
+      gradient.addColorStop(0.82, "rgba(139,92,246,0.22)");
+      gradient.addColorStop(1, "rgba(139,92,246,0)");
+
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = fade;
+
+      // Soft outer purple bloom
+      ctx.shadowColor = "rgba(167,139,250,0.65)";
+      ctx.shadowBlur = 15;
+
+      ctx.fillStyle = gradient;
+      ctx.fill(buildRibbon(left, right));
+
+      // Fine, luminous center line
+      const coreGradient = ctx.createLinearGradient(
+        tail.x,
+        tail.y,
+        tip.x,
+        tip.y
+      );
+
+      coreGradient.addColorStop(0, "rgba(139,92,246,0)");
+      coreGradient.addColorStop(0.4, "rgba(196,181,253,0.35)");
+      coreGradient.addColorStop(1, "rgba(255,255,255,0.95)");
+
+      ctx.shadowColor = "rgba(255,255,255,0.7)";
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = coreGradient;
+      ctx.fill(buildRibbon(coreLeft, coreRight));
+
+      ctx.restore();
+    };
+
+    // Tiny, precise comet head
+    const drawHead = (now) => {
+      const idleTime = now - pointer.lastMove;
+      const opacity = clamp(1 - idleTime / 180);
+
+      if (!pointer.initialized || opacity <= 0) return;
+
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = opacity;
+
+      const glow = ctx.createRadialGradient(
+        head.x,
+        head.y,
+        0,
+        head.x,
+        head.y,
+        6
+      );
+
+      glow.addColorStop(0, "rgba(255,255,255,0.95)");
+      glow.addColorStop(0.25, "rgba(235,225,255,0.7)");
+      glow.addColorStop(0.6, "rgba(167,139,250,0.18)");
+      glow.addColorStop(1, "rgba(139,92,246,0)");
 
       ctx.beginPath();
-      ctx.arc(pointer.x, pointer.y, 22, 0, Math.PI * 2);
+      ctx.arc(head.x, head.y, 6, 0, Math.PI * 2);
       ctx.fillStyle = glow;
       ctx.fill();
 
-      frame = requestAnimationFrame(draw);
+      // Sharp central point
+      ctx.beginPath();
+      ctx.arc(head.x, head.y, 1.25, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "#ffffff";
+      ctx.shadowBlur = 5;
+      ctx.fill();
+
+      ctx.restore();
+    };
+
+    // Main render loop
+    const render = (now) => {
+      animationFrame = null;
+
+      const delta = lastFrame
+        ? Math.min(now - lastFrame, 32)
+        : 16.67;
+
+      lastFrame = now;
+
+      ctx.clearRect(0, 0, width, height);
+
+      if (pointer.initialized) {
+        // Smooth cursor following with slight inertia
+        const smoothing = 1 - Math.exp(-delta / SMOOTHING);
+
+        head.x += (pointer.x - head.x) * smoothing;
+        head.y += (pointer.y - head.y) * smoothing;
+
+        const last = points[points.length - 1];
+
+        const distance = last
+          ? Math.hypot(head.x - last.x, head.y - last.y)
+          : Infinity;
+
+        if (distance > 0.45) {
+          points.push({
+            x: head.x,
+            y: head.y,
+            time: now
+          });
+        }
+
+        if (points.length > MAX_POINTS) {
+          points.splice(0, points.length - MAX_POINTS);
+        }
+      }
+
+      // Remove expired path points
+      points = points.filter(
+        point => now - point.time < MAX_AGE
+      );
+
+      // Fade the whole trail after movement stops
+      const idleFade = pointer.initialized
+        ? clamp(1 - (now - pointer.lastMove) / 650)
+        : 0;
+
+      if (points.length >= 3) {
+        const smoothPath = getSmoothPath(points);
+        drawRibbon(smoothPath, now, idleFade);
+      }
+
+      drawHead(now);
+
+      const remainingDistance = pointer.initialized
+        ? Math.hypot(pointer.x - head.x, pointer.y - head.y)
+        : 0;
+
+      const following = remainingDistance > 0.15;
+      const hasTrail = points.length >= 2;
+      const recentlyMoved = now - pointer.lastMove < 180;
+
+      // Stop rendering when no visible effect remains
+      if (hasTrail || following || recentlyMoved) {
+        animationFrame = requestAnimationFrame(render);
+      } else {
+        points.length = 0;
+        ctx.clearRect(0, 0, width, height);
+      }
     };
 
     resize();
-    frame = requestAnimationFrame(draw);
 
     window.addEventListener("resize", resize);
-    window.addEventListener("pointermove", move);
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: true
+    });
+    window.addEventListener("pointerleave", handlePointerLeave);
 
     return () => {
-      cancelAnimationFrame(frame);
+      if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
+      }
+
       window.removeEventListener("resize", resize);
-      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerleave", handlePointerLeave);
+
+      points.length = 0;
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="cursor-effects" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="cursor-effects"
+      aria-hidden="true"
+    />
+  );
 }
 function App() {
   // Discord data
