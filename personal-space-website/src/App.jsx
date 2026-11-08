@@ -223,52 +223,69 @@ function RiotIdCard() {
   );
 }
 
-
 function CursorEffects() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
 
-    const finePointer = window.matchMedia("(pointer: fine)");
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    );
-
-    if (!canvas || !finePointer.matches || reducedMotion.matches) {
+    if (
+      !canvas ||
+      !window.matchMedia("(pointer: fine)").matches ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       return;
     }
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Visual configuration
-    const MAX_AGE = 480;
-    const MAX_POINTS = 100;
-    const MAX_WIDTH = 10;
-    const SMOOTHING = 50;
+    // ===== SPRING CONFIGURATION =====
+    const TRAIL_COUNT = 6;
+    const NODE_COUNT = 42;
 
-    let width = 0;
-    let height = 0;
-    let dpr = 1;
+    const FRICTION = 0.72;
+    const DAMPENING = 0.19;
+    const TENSION = 0.965;
 
-    let points = [];
-    let animationFrame = null;
-    let lastFrame = 0;
+    const MAX_FRAME_DELTA = 32;
+    const STOP_THRESHOLD = 0.025;
 
-    let pointer = {
-      x: 0,
-      y: 0,
-      lastMove: 0,
-      initialized: false
+    // ===== VISUAL CONFIGURATION =====
+    const COLORS = {
+      violet: "rgba(139, 92, 246, 0.8)",
+      lavender: "rgba(167, 139, 250, 0.85)",
+      softLavender: "rgba(196, 181, 253, 0.8)",
+      white: "rgba(255, 250, 255, 0.95)"
     };
 
-    let head = { x: 0, y: 0 };
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let dpr = 1;
 
-    const clamp = (value, min = 0, max = 1) =>
-      Math.max(min, Math.min(max, value));
+    let animationFrame = null;
+    let lastFrame = 0;
+    let initialized = false;
 
-    // Canvas high-DPI setup
+    const pointer = {
+      x: 0,
+      y: 0
+    };
+
+    // Each trail has its own spring behavior.
+    const trails = Array.from({ length: TRAIL_COUNT }, (_, index) => ({
+      spring: 0.34 + (index / TRAIL_COUNT) * 0.045,
+      friction: FRICTION + index * 0.008,
+
+      nodes: Array.from({ length: NODE_COUNT }, () => ({
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0
+      }))
+    }));
+
+    // ===== CANVAS SETUP =====
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -282,341 +299,283 @@ function CursorEffects() {
       canvas.style.height = `${height}px`;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
     };
 
-    const requestRender = () => {
+    // ===== SMOOTH CURVE =====
+    const drawSmoothCurve = (nodes) => {
+      if (nodes.length < 3) return;
+
+      ctx.beginPath();
+
+      ctx.moveTo(nodes[0].x, nodes[0].y);
+
+      let i = 1;
+
+      for (; i < nodes.length - 2; i++) {
+        const current = nodes[i];
+        const next = nodes[i + 1];
+
+        const midX = (current.x + next.x) / 2;
+        const midY = (current.y + next.y) / 2;
+
+        ctx.quadraticCurveTo(
+          current.x,
+          current.y,
+          midX,
+          midY
+        );
+      }
+
+      const p1 = nodes[i];
+      const p2 = nodes[i + 1];
+
+      ctx.quadraticCurveTo(
+        p1.x,
+        p1.y,
+        p2.x,
+        p2.y
+      );
+    };
+
+    // ===== DRAW ONE SPRING TRAIL =====
+    const drawTrail = (trail, index) => {
+      const nodes = trail.nodes;
+
+      const head = nodes[0];
+      const tail = nodes[nodes.length - 1];
+
+      const distance = Math.hypot(
+        head.x - tail.x,
+        head.y - tail.y
+      );
+
+      if (distance < 0.3) return;
+
+      const strength = 1 - index / TRAIL_COUNT;
+
+      // Gradient follows the trail direction.
+      const gradient = ctx.createLinearGradient(
+        head.x,
+        head.y,
+        tail.x,
+        tail.y
+      );
+
+      gradient.addColorStop(
+        0,
+        `rgba(255, 255, 255, ${0.78 * strength})`
+      );
+
+      gradient.addColorStop(
+        0.12,
+        `rgba(196, 181, 253, ${0.7 * strength})`
+      );
+
+      gradient.addColorStop(
+        0.48,
+        `rgba(167, 139, 250, ${0.38 * strength})`
+      );
+
+      gradient.addColorStop(
+        1,
+        "rgba(139, 92, 246, 0)"
+      );
+
+      ctx.save();
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.globalCompositeOperation = "lighter";
+
+      drawSmoothCurve(nodes);
+
+      // Outer purple bloom.
+      ctx.save();
+      ctx.strokeStyle = COLORS.violet;
+      ctx.globalAlpha = 0.16 * strength;
+      ctx.lineWidth = 4.2;
+      ctx.shadowColor = "#8B5CF6";
+      ctx.shadowBlur = 15;
+      ctx.stroke();
+      ctx.restore();
+
+      // Main lavender trail.
+      drawSmoothCurve(nodes);
+      ctx.strokeStyle = gradient;
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = 1.9;
+      ctx.shadowColor = "#A78BFA";
+      ctx.shadowBlur = 7;
+      ctx.stroke();
+
+      // Fine white-lavender center line.
+      if (index < 2) {
+        drawSmoothCurve(nodes);
+        ctx.strokeStyle = COLORS.white;
+        ctx.globalAlpha = 0.18 + strength * 0.25;
+        ctx.lineWidth = 0.7;
+        ctx.shadowColor = "#E9DDFF";
+        ctx.shadowBlur = 4;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    };
+
+    // ===== SPRING PHYSICS =====
+    const updateTrail = (trail, delta) => {
+      let spring = trail.spring;
+      const nodes = trail.nodes;
+
+      const first = nodes[0];
+
+      first.vx += (pointer.x - first.x) * spring;
+      first.vy += (pointer.y - first.y) * spring;
+
+      let motion = 0;
+
+      for (let i = 0; i < nodes.length; i++) {
+        const current = nodes[i];
+
+        if (i > 0) {
+          const previous = nodes[i - 1];
+
+          current.vx +=
+            (previous.x - current.x) * spring;
+
+          current.vy +=
+            (previous.y - current.y) * spring;
+
+          current.vx += previous.vx * DAMPENING;
+          current.vy += previous.vy * DAMPENING;
+        }
+
+        current.vx *= Math.pow(trail.friction, delta);
+        current.vy *= Math.pow(trail.friction, delta);
+
+        current.x += current.vx * delta;
+        current.y += current.vy * delta;
+
+        motion = Math.max(
+          motion,
+          Math.abs(current.vx),
+          Math.abs(current.vy)
+        );
+
+        spring *= TENSION;
+      }
+
+      return motion;
+    };
+
+    // ===== CURSOR MOVEMENT =====
+    const handlePointerMove = (event) => {
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+
+      if (!initialized) {
+        initialized = true;
+
+        trails.forEach(trail => {
+          trail.nodes.forEach(node => {
+            node.x = pointer.x;
+            node.y = pointer.y;
+            node.vx = 0;
+            node.vy = 0;
+          });
+        });
+      }
+
       if (animationFrame === null) {
         animationFrame = requestAnimationFrame(render);
       }
     };
 
-    // Receive cursor movement
-    const handlePointerMove = (event) => {
-      const x = event.clientX;
-      const y = event.clientY;
-      const now = performance.now();
-
-      if (!pointer.initialized) {
-        pointer.initialized = true;
-
-        pointer.x = x;
-        pointer.y = y;
-
-        head.x = x;
-        head.y = y;
-
-        points.push({ x, y, time: now });
-      }
-
-      pointer.x = x;
-      pointer.y = y;
-      pointer.lastMove = now;
-
-      requestRender();
-    };
-
-    const handlePointerLeave = () => {
-      pointer.lastMove = performance.now() - 180;
-      requestRender();
-    };
-
-    // Catmull-Rom interpolation for a smooth curved path
-    const getSmoothPath = (source) => {
-      if (source.length < 2) return [];
-
-      const result = [];
-      const SUBDIVISIONS = 4;
-
-      for (let i = 0; i < source.length - 1; i++) {
-        const p0 = source[Math.max(0, i - 1)];
-        const p1 = source[i];
-        const p2 = source[i + 1];
-        const p3 = source[Math.min(source.length - 1, i + 2)];
-
-        for (let step = 0; step < SUBDIVISIONS; step++) {
-          const t = step / SUBDIVISIONS;
-          const t2 = t * t;
-          const t3 = t2 * t;
-
-          const interpolate = (a, b, c, d) =>
-            0.5 * (
-              2 * b +
-              (-a + c) * t +
-              (2 * a - 5 * b + 4 * c - d) * t2 +
-              (-a + 3 * b - 3 * c + d) * t3
-            );
-
-          result.push({
-            x: interpolate(p0.x, p1.x, p2.x, p3.x),
-            y: interpolate(p0.y, p1.y, p2.y, p3.y),
-            time: p1.time + (p2.time - p1.time) * t
-          });
-        }
-      }
-
-      result.push(source[source.length - 1]);
-
-      return result;
-    };
-
-    // Draw a tapered ribbon
-    const drawRibbon = (path, now, fade) => {
-      if (path.length < 3 || fade <= 0) return;
-
-      const left = [];
-      const right = [];
-      const coreLeft = [];
-      const coreRight = [];
-
-      let headNormal = { x: 0, y: 1 };
-
-      for (let i = 0; i < path.length; i++) {
-        const previous = path[Math.max(0, i - 1)];
-        const next = path[Math.min(path.length - 1, i + 1)];
-
-        const dx = next.x - previous.x;
-        const dy = next.y - previous.y;
-        const length = Math.hypot(dx, dy) || 1;
-
-        const nx = -dy / length;
-        const ny = dx / length;
-
-        if (i === path.length - 1) {
-          headNormal = { x: nx, y: ny };
-        }
-
-        const progress = i / (path.length - 1);
-        const age = now - path[i].time;
-        const ageFade = clamp(1 - age / MAX_AGE);
-
-        // Narrow at the tail, wider near the head
-        const taper = Math.pow(progress, 1.25);
-        const halfWidth =
-          (0.04 + MAX_WIDTH * taper) *
-          Math.pow(ageFade, 0.75);
-
-        left.push({
-          x: path[i].x + nx * halfWidth,
-          y: path[i].y + ny * halfWidth
-        });
-
-        right.push({
-          x: path[i].x - nx * halfWidth,
-          y: path[i].y - ny * halfWidth
-        });
-
-        const coreWidth = halfWidth * 0.24;
-
-        coreLeft.push({
-          x: path[i].x + nx * coreWidth,
-          y: path[i].y + ny * coreWidth
-        });
-
-        coreRight.push({
-          x: path[i].x - nx * coreWidth,
-          y: path[i].y - ny * coreWidth
-        });
-      }
-
-      const buildRibbon = (a, b) => {
-        const shape = new Path2D();
-
-        shape.moveTo(a[0].x, a[0].y);
-
-        for (let i = 1; i < a.length; i++) {
-          shape.lineTo(a[i].x, a[i].y);
-        }
-
-        for (let i = b.length - 1; i >= 0; i--) {
-          shape.lineTo(b[i].x, b[i].y);
-        }
-
-        shape.closePath();
-
-        return shape;
-      };
-
-      const tail = path[0];
-      const tip = path[path.length - 1];
-
-      // Gradient across the width of the comet
-      const gradientStart = {
-        x: tip.x - headNormal.x * MAX_WIDTH,
-        y: tip.y - headNormal.y * MAX_WIDTH
-      };
-
-      const gradientEnd = {
-        x: tip.x + headNormal.x * MAX_WIDTH,
-        y: tip.y + headNormal.y * MAX_WIDTH
-      };
-
-      const gradient = ctx.createLinearGradient(
-        gradientStart.x,
-        gradientStart.y,
-        gradientEnd.x,
-        gradientEnd.y
-      );
-
-      gradient.addColorStop(0, "rgba(139,92,246,0)");
-      gradient.addColorStop(0.18, "rgba(139,92,246,0.22)");
-      gradient.addColorStop(0.36, "rgba(167,139,250,0.62)");
-      gradient.addColorStop(0.5, "rgba(255,250,255,0.95)");
-      gradient.addColorStop(0.64, "rgba(196,181,253,0.62)");
-      gradient.addColorStop(0.82, "rgba(139,92,246,0.22)");
-      gradient.addColorStop(1, "rgba(139,92,246,0)");
-
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = fade;
-
-      // Soft outer purple bloom
-      ctx.shadowColor = "rgba(167,139,250,0.65)";
-      ctx.shadowBlur = 15;
-
-      ctx.fillStyle = gradient;
-      ctx.fill(buildRibbon(left, right));
-
-      // Fine, luminous center line
-      const coreGradient = ctx.createLinearGradient(
-        tail.x,
-        tail.y,
-        tip.x,
-        tip.y
-      );
-
-      coreGradient.addColorStop(0, "rgba(139,92,246,0)");
-      coreGradient.addColorStop(0.4, "rgba(196,181,253,0.35)");
-      coreGradient.addColorStop(1, "rgba(255,255,255,0.95)");
-
-      ctx.shadowColor = "rgba(255,255,255,0.7)";
-      ctx.shadowBlur = 4;
-      ctx.fillStyle = coreGradient;
-      ctx.fill(buildRibbon(coreLeft, coreRight));
-
-      ctx.restore();
-    };
-
-    // Tiny, precise comet head
-    const drawHead = (now) => {
-      const idleTime = now - pointer.lastMove;
-      const opacity = clamp(1 - idleTime / 180);
-
-      if (!pointer.initialized || opacity <= 0) return;
-
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = opacity;
-
-      const glow = ctx.createRadialGradient(
-        head.x,
-        head.y,
-        0,
-        head.x,
-        head.y,
-        6
-      );
-
-      glow.addColorStop(0, "rgba(255,255,255,0.95)");
-      glow.addColorStop(0.25, "rgba(235,225,255,0.7)");
-      glow.addColorStop(0.6, "rgba(167,139,250,0.18)");
-      glow.addColorStop(1, "rgba(139,92,246,0)");
-
-      ctx.beginPath();
-      ctx.arc(head.x, head.y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = glow;
-      ctx.fill();
-
-      // Sharp central point
-      ctx.beginPath();
-      ctx.arc(head.x, head.y, 1.25, 0, Math.PI * 2);
-      ctx.fillStyle = "#ffffff";
-      ctx.shadowColor = "#ffffff";
-      ctx.shadowBlur = 5;
-      ctx.fill();
-
-      ctx.restore();
-    };
-
-    // Main render loop
+    // ===== RENDER LOOP =====
     const render = (now) => {
       animationFrame = null;
 
       const delta = lastFrame
-        ? Math.min(now - lastFrame, 32)
-        : 16.67;
+        ? Math.min((now - lastFrame) / 16.67, MAX_FRAME_DELTA / 16.67)
+        : 1;
 
       lastFrame = now;
 
       ctx.clearRect(0, 0, width, height);
 
-      if (pointer.initialized) {
-        // Smooth cursor following with slight inertia
-        const smoothing = 1 - Math.exp(-delta / SMOOTHING);
+      let totalMotion = 0;
 
-        head.x += (pointer.x - head.x) * smoothing;
-        head.y += (pointer.y - head.y) * smoothing;
+      trails.forEach((trail, index) => {
+        const motion = updateTrail(trail, delta);
 
-        const last = points[points.length - 1];
+        totalMotion = Math.max(totalMotion, motion);
 
-        const distance = last
-          ? Math.hypot(head.x - last.x, head.y - last.y)
-          : Infinity;
+        drawTrail(trail, index);
+      });
 
-        if (distance > 0.45) {
-          points.push({
-            x: head.x,
-            y: head.y,
-            time: now
-          });
-        }
+      // Sharp, tiny cursor highlight.
+      const head = trails[0].nodes[0];
 
-        if (points.length > MAX_POINTS) {
-          points.splice(0, points.length - MAX_POINTS);
-        }
-      }
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
 
-      // Remove expired path points
-      points = points.filter(
-        point => now - point.time < MAX_AGE
+      const headGlow = ctx.createRadialGradient(
+        head.x,
+        head.y,
+        0,
+        head.x,
+        head.y,
+        5
       );
 
-      // Fade the whole trail after movement stops
-      const idleFade = pointer.initialized
-        ? clamp(1 - (now - pointer.lastMove) / 650)
-        : 0;
+      headGlow.addColorStop(
+        0,
+        "rgba(255,255,255,0.95)"
+      );
 
-      if (points.length >= 3) {
-        const smoothPath = getSmoothPath(points);
-        drawRibbon(smoothPath, now, idleFade);
-      }
+      headGlow.addColorStop(
+        0.3,
+        "rgba(196,181,253,0.55)"
+      );
 
-      drawHead(now);
+      headGlow.addColorStop(
+        1,
+        "rgba(139,92,246,0)"
+      );
 
-      const remainingDistance = pointer.initialized
-        ? Math.hypot(pointer.x - head.x, pointer.y - head.y)
-        : 0;
+      ctx.beginPath();
+      ctx.arc(head.x, head.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = headGlow;
+      ctx.fill();
 
-      const following = remainingDistance > 0.15;
-      const hasTrail = points.length >= 2;
-      const recentlyMoved = now - pointer.lastMove < 180;
+      ctx.beginPath();
+      ctx.arc(head.x, head.y, 1.15, 0, Math.PI * 2);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.shadowColor = "#C4B5FD";
+      ctx.shadowBlur = 5;
+      ctx.fill();
 
-      // Stop rendering when no visible effect remains
-      if (hasTrail || following || recentlyMoved) {
+      ctx.restore();
+
+      // Stop rendering once the spring system settles.
+      if (totalMotion > STOP_THRESHOLD) {
         animationFrame = requestAnimationFrame(render);
       } else {
-        points.length = 0;
         ctx.clearRect(0, 0, width, height);
+        lastFrame = 0;
       }
     };
 
+    // ===== INITIALIZATION =====
     resize();
 
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", handlePointerMove, {
       passive: true
     });
-    window.addEventListener("pointerleave", handlePointerLeave);
 
+    // ===== CLEANUP =====
     return () => {
       if (animationFrame !== null) {
         cancelAnimationFrame(animationFrame);
@@ -624,9 +583,10 @@ function CursorEffects() {
 
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerleave", handlePointerLeave);
 
-      points.length = 0;
+      trails.forEach(trail => {
+        trail.nodes.length = 0;
+      });
     };
   }, []);
 
