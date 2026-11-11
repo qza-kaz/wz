@@ -2607,3 +2607,50 @@ canvas.cursor-effects {
     display: none !important;
   }
 }
+
+/* ===== PROFILE & WIDGET WIDTH ===== */
+
+/* Khung chứa toàn bộ website */
+.content {
+  width: 100%;
+  max-width: 780px;
+  padding: 0 20px 35px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Profile card */
+.profile-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 32px 30px 25px;
+}
+
+/* Discord widget */
+.dashboard {
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 24px;
+}
+
+/* Các widget bên trong */
+.discord-panel,
+.quote-panel,
+.riot-id-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .content {
+    padding: 25px 14px;
+  }
+
+  .profile-card {
+    padding: 22px 17px;
+  }
+}
