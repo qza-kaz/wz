@@ -2305,7 +2305,7 @@ body,
 @media (max-width: 600px) {
   .riot-id-card {
     border-radius: 16px;
-    margin-top: -25px;
+    margin-top: -15px;
   }
 }
 /* Time and device at the bottom of profile card */
