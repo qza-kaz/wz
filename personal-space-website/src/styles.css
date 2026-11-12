@@ -2305,9 +2305,9 @@ body,
 @media (max-width: 600px) {
   .riot-id-card {
     border-radius: 16px;
+    margin-top: -25px;
   }
 }
-
 /* Time and device at the bottom of profile card */
 .profile-card-foot {
   display: flex;
