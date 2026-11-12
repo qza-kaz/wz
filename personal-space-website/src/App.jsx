@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   Activity,
@@ -38,130 +39,6 @@ const socialIcons = {
   Spotify: siSpotify,
   Riot: siRiotgames,
 };
-function DiscordCard({ presence, connection }) {
-  const user = presence?.discord_user;
-  const status = statusMap[presence?.discord_status || "offline"];
-  const activities = presence?.activities || [];
-  const spotify = presence?.spotify;
-  const game = activities.find(a => a.type === 0);
-  const custom = activities.find(a => a.type === 4);
-  const otherActivity = activities.find(a => a.type !== 0 && a.type !== 4);
-
-  const avatar = user?.avatar
-    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${user.avatar.startsWith("a_") ? "gif" : "png"}?size=256`
-    : config.avatarUrl;
-
-  const activityLine = spotify
-    ? `Listening to ${spotify.song}`
-    : game
-      ? `Playing ${game.name}`
-      : otherActivity
-        ? otherActivity.name
-        : "No activity shared right now";
-
-  return (
-    
-<section className="panel discord-panel">
-
-  <div className="discord-user">
-
-    {/* Discord avatar */}
-    <div className="avatar-wrap">
-      <img
-        src={avatar}
-        alt="Discord avatar"
-        onError={e => {
-          e.currentTarget.src = config.avatarUrl;
-        }}
-      />
-      <i
-        className="status-dot"
-        style={{ background: status.color }}
-      />
-    </div>
-
-    {/* Discord user information */}
-    <div className="user-copy">
-      <strong>
-        {user?.global_name || user?.display_name || config.displayName}
-      </strong>
-
-      <span>
-        {user?.username ? `@${user.username}` : config.handle}
-      </span>
-
-      <a
-        className="discord-view-profile"
-        href={`https://discord.com/users/${config.discordUserId}`}
-        target="_blank"
-        rel="noreferrer"
-      >
-        VIEW PROFILE
-      </a>
-
-      {status.label !== "do not disturb" && (
-        <small>
-          <i style={{ background: status.color }} />
-          {status.label}
-        </small>
-      )}
-    </div>
-
-  </div>
-            {(spotify || game || otherActivity) && (
-  <div className="activity-box">
-
-    {/* Album bên trái khi nghe Spotify */}
-    {spotify?.album_art_url ? (
-      <img
-        className="album-thumb"
-        src={spotify.album_art_url}
-        alt="Spotify album cover"
-      />
-    ) : (
-      <div className="activity-icon">
-        {game ? <Gamepad2 /> : <Activity />}
-      </div>
-    )}
-
-    <div className="activity-copy">
-      <span className="eyebrow">CURRENT ACTIVITY</span>
-      <strong>{activityLine}</strong>
-      <small>
-        {spotify
-          ? spotify.artist
-          : game?.details || otherActivity?.state || " "}
-      </small>
-    </div>
-
-  </div>
-)}      {spotify && (
-        <div className="spotify-progress">
-          <div>
-            <span>{spotify.song}</span>
-            <span>{spotify.artist}</span>
-          </div>
-          <div className="progress-track">
-            <span style={{
-              width: `${Math.min(100, (spotify.timestamps?.start && spotify.timestamps?.end
-                ? ((Date.now() - spotify.timestamps.start) /
-                  (spotify.timestamps.end - spotify.timestamps.start)) * 100
-                : 0))}%`
-            }} />
-          </div>
-        </div>
-      )}
-
-      {!presence && (
-  <p className="hint">
-    Discord presence will appear once your account is available through Lanyard.
-  </p>
-)}
-
-    </section>
-  );
-}
- 
 function ProfileCardFooter({ presence }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -511,6 +388,68 @@ function CursorEffects() {
     />
   );
 }
+function FloatingActivity({ presence }) {
+  const spotify = presence?.spotify;
+
+  const activity = presence?.activities?.find(
+    (item) => item.type !== 4 && item.name !== "Spotify"
+  );
+
+  if (!spotify && !activity) return null;  if (!spotify && !activity) return null;
+  const handleActivityMove = (e) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const rotateY = (x / rect.width - 0.5) * 12;
+    const rotateX = (0.5 - y / rect.height) * 8;
+
+    card.style.transform =
+      `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.035)`;
+  };
+
+  const handleActivityLeave = (e) => {
+    e.currentTarget.style.transform =
+      "perspective(900px) rotateX(0deg) rotateY(0deg) scale(1)";
+  };
+
+  return createPortal(
+    <div
+  className="floating-activity"
+  onMouseMove={handleActivityMove}
+  onMouseLeave={handleActivityLeave}
+>      <div className="floating-activity-art">
+        {spotify?.album_art_url ? (
+          <img src={spotify.album_art_url} alt="Album cover" />
+        ) : (
+          <Gamepad2 size={25} />
+        )}
+      </div>
+
+      <div className="floating-activity-info">
+        <div className="floating-activity-label">
+          <span className="activity-dot" />
+          {spotify ? "LISTENING TO SPOTIFY" : "CURRENT ACTIVITY"}
+        </div>
+
+        <strong>
+          {spotify
+            ? spotify.song
+            : activity?.name || "No activity"}
+        </strong>
+
+        <span>
+          {spotify
+            ? spotify.artist
+            : activity?.details || activity?.state || "Waiting for activity..."}
+        </span>
+      </div>
+    </div>,
+    document.body
+  );
+}
 function App() {
   // Discord data
   const { data, connection } = useLanyard(config.discordUserId);
@@ -697,103 +636,116 @@ const enterWebsite = () => {
     ref={profileRef}
     onMouseMove={handleProfileMove}
     onMouseLeave={handleProfileLeave}
-  >            <section className="hero">
-              <div className="hero-avatar">
-  <img
-    className="hero-avatar-image"
-    src={config.avatarUrl}
-    alt="Profile avatar"
-  />
-
-  {decorationUrl && (
+  >            
+<section className="hero">
+  {/* AVATAR */}
+  <div className="hero-avatar">
     <img
-      className="hero-avatar-decoration"
-      src={decorationUrl}
-      alt=""
-      aria-hidden="true"
+      className="hero-avatar-image"
+      src={config.avatarUrl}
+      alt="Profile avatar"
     />
-  )}
 
-  <span className="avatar-spark">
-    <Sparkles size={13} />
-  </span>
-</div>
-             <div className="profile-info">
-  <h1 className="brand-name">
-    {config.displayName}
-    <span className="title-period">.</span>
-  </h1>                <p className="handle">{config.handle}</p>
+    {decorationUrl && (
+      <img
+        className="hero-avatar-decoration"
+        src={decorationUrl}
+        alt=""
+        aria-hidden="true"
+      />
+    )}
 
-<div className="profile-location">
-  <MapPin size={13} />
-  <span>{config.location}</span>
-</div>
-<p className="tagline">{config.tagline}</p> 
-<div className="social-row">
-  {config.socials.map((item) => {
-    const icon = socialIcons[item.label];
-
-    return (
-      <a
-        key={item.label}
-        href={item.label === "Riot" ? undefined : item.href}
-        onClick={async (e) => {
-          if (item.label === "Riot") {
-            e.preventDefault();
-
-            try {
-              await navigator.clipboard.writeText(item.value);
-              setCopiedRiot(true);
-
-              window.setTimeout(() => {
-                setCopiedRiot(false);
-              }, 2000);
-            } catch (error) {
-              console.error("Cannot copy Riot ID:", error);
-            }
-          }
-        }}
-        target={item.label === "Riot" ? undefined : "_blank"}
-        rel="noreferrer"
-        className="social-link social-icon-link"
-        aria-label={item.label}
-        title={item.label === "Riot" ? "Copy Riot ID" : item.label}
-      >
-        {icon && (
-          <svg
-            viewBox="0 0 24 24"
-            width="27"
-            height="27"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d={icon.path} />
-          </svg>
-        )}
-      </a>
-    );
-  })}
-</div>
-
-{copiedRiot && (
-  <div className="copy-toast">
-    <Check size={14} />
-    Đã copy Riot ID!
+    <span className="avatar-spark">
+      <Sparkles size={13} />
+    </span>
   </div>
-)}
-          </div>
-            </section>
 
-            <div className="dashboard">
-  <DiscordCard
-    presence={data}
-    connection={connection}
-  />
+  {/* PROFILE INFO */}
+  <div className="profile-info">
+    <h1 className="brand-name">
+      {config.displayName}
+      <span className="title-period">.</span>
+    </h1>
 
+    <p className="handle">{config.handle}</p>
+
+    <a
+      className="discord-view-profile"
+      href={`https://discord.com/users/${config.discordUserId}`}
+      target="_blank"
+      rel="noreferrer"
+    >
+      VIEW PROFILE
+    </a>
+
+    <p className="tagline">{config.tagline}</p>
+  </div>
+
+  {/* SOCIAL ICONS */}
+  <div className="social-row">
+    {config.socials.map((item) => {
+      const icon = socialIcons[item.label];
+
+      return (
+        <a
+          key={item.label}
+          href={item.label === "Riot" ? undefined : item.href}
+          onClick={async (e) => {
+            if (item.label === "Riot") {
+              e.preventDefault();
+
+              try {
+                await navigator.clipboard.writeText(item.value);
+                setCopiedRiot(true);
+                window.setTimeout(() => setCopiedRiot(false), 2000);
+              } catch (error) {
+                console.error("Cannot copy Riot ID:", error);
+              }
+            }
+          }}
+          target={item.label === "Riot" ? undefined : "_blank"}
+          rel="noreferrer"
+          className="social-link social-icon-link"
+          aria-label={item.label}
+          title={item.label === "Riot" ? "Copy Riot ID" : item.label}
+        >
+          {icon && (
+            <svg
+              viewBox="0 0 24 24"
+              width="27"
+              height="27"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d={icon.path} />
+            </svg>
+          )}
+        </a>
+      );
+    })}
+
+    {copiedRiot && (
+      <div className="copy-toast">
+        <Check size={14} />
+        Đã copy Riot ID!
+      </div>
+    )}
+  </div>
+
+  {/* LOCATION */}
+  <div className="hero-location">
+    <div className="profile-location">
+      <MapPin size={13} />
+      <span>{config.location}</span>
+    </div>
+  </div>
+</section>
+<div className="dashboard">
   <RiotIdCard />
 </div>
 
-<ProfileCardFooter presence={data} />        </div>
+<ProfileCardFooter presence={data} />
+    </div>
         </div>
 
         <footer className="footer">            <div className="footer-message">
@@ -805,7 +757,11 @@ const enterWebsite = () => {
             </div>
           </footer>
         </div>
-            </main>
+                  </main>
+
+      {!introVisible && (
+        <FloatingActivity presence={data} />
+      )}
     </>
   );
 }
