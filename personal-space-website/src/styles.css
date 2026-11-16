@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Lilita+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @font-face {
   font-family: "Playpen Sans";
@@ -81,7 +81,7 @@ button {
   gap: 9px;
 }
 
-.wordmark-dot, .footer-dot {
+.wordmark-dot{
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -100,7 +100,7 @@ button {
   align-items: center;
   gap: 15px;
   color: #777;
-  font: 10px 'DM Mono', monospace;
+  font: 10px "DM Mono", monospace;
   letter-spacing: 1px;
 }
 
@@ -190,14 +190,9 @@ button {
   border: 3px solid #090909;
 }
 
-.eyebrow {
-  font: 9px 'DM Mono', monospace;
-  letter-spacing: 1.8px;
-  color: #777;
-  margin: 0;
-}
 
-.hero-kicker { margin-top: 27px; }
+
+
 
 .hero h1 {
   font-size: clamp(43px,8vw,68px);
@@ -210,7 +205,7 @@ button {
 .title-period { color: #a78bfa; }
 
 .handle {
-  font: 11px 'DM Mono', monospace;
+  font: 11px "DM Mono", monospace;
   color: #888;
   margin: 0;
 }
@@ -222,15 +217,9 @@ button {
   font-weight: 500;
 }
 
-.location {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #777;
-  font-size: 11px;
-}
 
-.location svg { color: #999; }
+
+
 
 .social-row {
   display: flex;
@@ -268,234 +257,72 @@ button {
   margin-top: 62px;
 }
 
-.panel {
-  border: 1px solid #252525;
-  background: rgba(15,15,15,.94);
-  backdrop-filter: blur(18px);
-  border-radius: 11px;
-  padding: 20px;
-  box-shadow: 0 18px 50px rgba(0,0,0,.25);
-}
 
-.panel-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22px;
-}
 
-.heading-left {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
 
-.icon-tile {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: #1c1c1c;
-  color: #b9a2f5;
-}
 
-.discord-mark { font-size: 18px; color: #aaa; }
 
-.panel h2 {
-  font-size: 14px;
-  margin: 3px 0 0;
-  letter-spacing: -.3px;
-}
 
-.live-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid #303030;
-  padding: 5px 8px;
-  border-radius: 30px;
-  color: #888;
-  font: 8px 'DM Mono', monospace;
-  letter-spacing: 1px;
-}
 
-.live-pill span {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #777;
-}
 
-.live-pill.is-live {
-  color: #78d8a1;
-  border-color: rgba(93,224,160,.22);
-}
 
-.live-pill.is-live span {
-  background: #5de0a0;
-  box-shadow: 0 0 8px #5de0a0;
-}
 
-.discord-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 
-.avatar-wrap {
-  position: relative;
-  width: 47px;
-  height: 47px;
-  flex-shrink: 0;
-}
 
-.avatar-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  background: #222;
-}
-.user-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
 
-.user-copy strong { font-size: 13px; }
 
-.user-copy>span {
-  font: 10px 'DM Mono', monospace;
-  color: #888;
-}
 
-.user-copy small {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #aaa;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: .7px;
-}
 
-.user-copy small i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-}
 
-.icon-button {
-  margin-left: auto;
-  width: 29px;
-  height: 29px;
-  border: 1px solid #333;
-  border-radius: 7px;
-  display: grid;
-  place-items: center;
-  color: #aaa;
-}
 
-.icon-button:hover { color: white; border-color: #888; }
 
-.custom-status {
-  font-size: 10px;
-  color: #bbb;
-  margin-top: 14px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: #191919;
-}
 
-.custom-status span { margin-right: 7px; }
 
-.activity-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 17px;
-  padding: 12px;
-  background: #191919;
-  border: 1px solid #292929;
-  border-radius: 8px;
-  min-width: 0;
-}
 
-.activity-icon {
-  width: 31px;
-  height: 31px;
-  flex-shrink: 0;
-  border-radius: 7px;
-  display: grid;
-  place-items: center;
-  background: #252525;
-  color: #b9a2f5;
-}
 
-.activity-icon svg { width: 16px; }
 
-.activity-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-  flex: 1;
-}
 
-.activity-copy strong {
-  font-size: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
-.activity-copy small {
-  font-size: 9px;
-  color: #999;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
-.album-thumb {
-  width: 37px;
-  height: 37px;
-  object-fit: cover;
-  border-radius: 5px;
-}
 
-.spotify-progress { margin-top: 12px; }
 
-.spotify-progress>div:first-child {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 8px;
-  color: #888;
-  margin-bottom: 6px;
-}
 
-.spotify-progress>div:first-child span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
-.progress-track {
-  height: 3px;
-  background: #333;
-  border-radius: 5px;
-  overflow: hidden;
-}
 
-.progress-track span {
-  display: block;
-  height: 100%;
-  background: #a78bfa;
-  border-radius: 5px;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .discord-foot {
   display: flex;
@@ -503,11 +330,11 @@ button {
   align-items: center;
   margin-top: 12px;
   color: #777;
-  font: 11px 'DM Mono', monospace;
+  font: 11px "DM Mono", monospace;
 }
 
 .widget-clock {
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   font-size: 11px;
   color: #888;
   opacity: 0.85;
@@ -518,118 +345,46 @@ button {
   gap: 5px;
 }
 
-.hint {
-  font-size: 9px;
-  line-height: 1.6;
-  color: #777;
-  margin: 12px 0 0;
-}
 
-.music-panel { display: flex; flex-direction: column; }
 
-.tiny-label {
-  font: 8px 'DM Mono', monospace;
-  color: #777;
-  letter-spacing: 1px;
-}
 
-.music-main {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 8px 0 23px;
-}
 
-.vinyl {
-  width: 76px;
-  height: 76px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: repeating-radial-gradient(circle at center,#292929 0 3px,#111 4px 6px);
-  border: 1px solid #444;
-  box-shadow: 0 0 20px rgba(0,0,0,.4);
-}
 
-.vinyl-center {
-  width: 29px;
-  height: 29px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #a78bfa;
-  color: #080808;
-}
 
-.track-info {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
 
-.track-info strong { font-size: 11px; }
-.track-info>span { font-size: 9px; color: #999; }
 
-.equalizer {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  height: 14px;
-  margin-top: 4px;
-}
 
-.equalizer i {
-  width: 2px;
-  height: 5px;
-  background: #aaa;
-  border-radius: 4px;
-  opacity: .8;
-}
 
-.equalizer i:nth-child(2), .equalizer i:nth-child(5) { height: 12px; }
-.equalizer i:nth-child(3), .equalizer i:nth-child(7) { height: 8px; }
 
-.music-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: auto;
-}
 
-.round-control, .play-control {
-  border: 1px solid #393939;
-  background: #1b1b1b;
-  color: #ccc;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
 
-.round-control {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-}
 
-.play-control {
-  width: 37px;
-  height: 37px;
-  border-radius: 50%;
-  background: #a78bfa;
-  color: #080808;
-  border: 0;
-}
 
-.play-control:disabled { opacity: .45; cursor: not-allowed; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 27px;
   color: #777;
-  font: 8px 'DM Mono', monospace;
+  font: 8px "DM Mono", monospace;
   letter-spacing: 1px;
 }
 
@@ -639,29 +394,19 @@ button {
   gap: 8px;
 }
 
-.footer-dot { width: 5px; height: 5px; }
-.footer-divider { color: #555; }
 
-.copy-id {
-  border: 0;
-  background: none;
-  color: #999;
-  font: 8px 'DM Mono', monospace;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-}
 
-.copy-id:hover { color: #c4b5fd; }
+
+
+
+
 
 @media(max-width:650px) {
   .topbar { padding: 22px 19px; }
   .topbar-label, .topbar-line { display: none; }
   .content { padding: 53px 17px 25px; }
   .dashboard { grid-template-columns: 1fr; margin-top: 44px; }
-  .music-panel { min-height: 220px; }
+  
   .hero h1 { letter-spacing: -2.5px; }
   .tagline { font-size: 12px; }
   .footer { gap: 12px; align-items: flex-start; flex-direction: column; }
@@ -671,7 +416,6 @@ button {
 
 /* Smooth hover animations */
 .social-link,
-.panel,
 /* Social links */
 .social-link:hover {
   transform: translateY(-3px);
@@ -680,24 +424,12 @@ button {
 }
 
 /* Dashboard panels */
-.panel:hover,
-.quote-panel:hover {
-  transform: translateY(-4px);
-  border-color: #555;
-  background: #141414;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-}
+
 /* Discord activity */
-.activity-box:hover {
-  border-color: #555;
-  background: #202020;
-}
+
 
 /* Music controls */
-.round-control:hover,
-.play-control:hover:not(:disabled) {
-  transform: scale(1.08);
-}
+
 
 /* Reduced motion accessibility */
 @media (prefers-reduced-motion: reduce) {
@@ -711,13 +443,7 @@ button {
 /* Purple glow hover effects */
 
 /* Discord, Spotify panels */
-.panel:hover,
-.quote-panel:hover {
-  border-color: rgba(167, 139, 250, 0.65);
-  box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.4),
-    0 0 18px rgba(167, 139, 250, 0.12);
-}
+
 
 /* Social links */
 .social-link:hover {
@@ -727,20 +453,12 @@ button {
 }
 
 /* Discord activity */
-.activity-box:hover {
-  border-color: rgba(167, 139, 250, 0.5);
-  box-shadow: 0 0 12px rgba(167, 139, 250, 0.1);
-}
+
 
 /* Music buttons */
-.round-control:hover,
-.play-control:hover:not(:disabled) {
-  box-shadow: 0 0 14px rgba(167, 139, 250, 0.35);
-}
+
 /* Vinyl spinning animation */
-.vinyl {
-  animation: vinyl-spin 8s linear infinite;
-}
+
 
 @keyframes vinyl-spin {
   from {
@@ -752,17 +470,14 @@ button {
 }
 
 /* Equalizer animation */
-.equalizer i {
-  animation: equalizer-wave 0.7s ease-in-out infinite alternate;
-  transform-origin: center;
-}
 
-.equalizer i:nth-child(2) { animation-delay: 0.15s; }
-.equalizer i:nth-child(3) { animation-delay: 0.3s; }
-.equalizer i:nth-child(4) { animation-delay: 0.1s; }
-.equalizer i:nth-child(5) { animation-delay: 0.25s; }
-.equalizer i:nth-child(6) { animation-delay: 0.4s; }
-.equalizer i:nth-child(7) { animation-delay: 0.2s; }
+
+
+
+
+
+
+
 
 @keyframes equalizer-wave {
   from {
@@ -776,12 +491,7 @@ button {
 }
 
 /* Respect reduced-motion settings */
-@media (prefers-reduced-motion: reduce) {
-  .vinyl,
-  .equalizer i {
-    animation: none;
-  }
-}
+
 /* Avatar glow effect */
 .hero-avatar {
   transition:
@@ -838,9 +548,7 @@ button {
   animation: fade-up 0.9s ease 0.4s both;
 }
 
-.quote-panel {
-  animation: fade-up 0.9s ease 0.55s both;
-}
+
 
 .footer {
   animation: fade-up 0.9s ease 0.65s both;
@@ -852,7 +560,6 @@ button {
   .hero,
   .social-row,
   .dashboard,
-  .quote-panel,
   .footer {
     animation: none;
   }
@@ -1026,7 +733,7 @@ button {
 }
 /* Sakura-inspired bold rounded font */
 .site-shell {
-  font-family: 'Lilita One', sans-serif;
+  font-family: "Lilita One", sans-serif;
 }
 /* ===== SOCIAL ICONS ===== */
 
@@ -1074,9 +781,7 @@ button {
 ================================= */
 
 /* Discord */
-.discord-panel {
-  animation: discordFloat 5s ease-in-out infinite;
-}
+
 
 @keyframes discordFloat {
   0%, 100% {
@@ -1089,11 +794,7 @@ button {
 }
 
 /* Quote */
-.quote-panel {
-  animation:
-    fade-up .9s ease .55s both,
-    quoteFloat 6s ease-in-out .5s infinite;
-}
+
 
 @keyframes quoteFloat {
   0%, 100% {
@@ -1125,13 +826,9 @@ button {
    HOVER INTERACTIONS
 ================================= */
 
-.discord-panel:hover {
-  transform: translateY(-4px);
-}
 
-.quote-panel:hover {
-  transform: translateY(-4px);
-}
+
+
 
 .hero-avatar:hover {
   transform: scale(1.06);
@@ -1147,8 +844,7 @@ button {
 ================================= */
 
 @media (prefers-reduced-motion: reduce) {
-  .discord-panel,
-  .quote-panel,
+  
   .hero-avatar {
     animation: none !important;
     translate: none !important;
@@ -1197,8 +893,8 @@ button {
 
 /* Main profile card */
 .profile-card {
-  width: 100%;
-  padding: 40px 35px 30px;
+  width: 50%;
+  padding: 16px 18px 14px;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 30px;
   background: rgba(12, 12, 16, .76);
@@ -1299,55 +995,22 @@ button {
   margin-top: 28px;
 }
 
-.discord-panel {
-  width: 100%;
-  padding: 20px;
-  border-radius: 21px;
-  background: rgba(12, 12, 16, .82);
-  border: 1px solid rgba(255,255,255,.10);
-  box-shadow: none;
-}
 
-.discord-panel:hover {
-  transform: none;
-}
 
-.panel-heading {
-  margin-bottom: 18px;
-}
+
+
+
 
 /* Quote */
-.quote-panel {
-  text-align: left;
-  margin-top: 45px;
-  padding: 10px 12px;
-  border: none;
-  background: transparent;
-  border-radius: 0;
-  animation: fade-up .9s ease .3s both;
-}
 
-.quote-panel:hover {
-  transform: none;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-}
 
-.quote-mark {
-  font-size: 20px;
-  color: #fff;
-}
 
-.quote-panel p {
-  font-size: 17px;
-  color: #888;
-  margin: 8px 0;
-}
 
-.quote-credit {
-  display: none;
-}
+
+
+
+
+
 
 /* Footer */
 .footer {
@@ -1366,11 +1029,7 @@ button {
   justify-content: center;
 }
 
-.footer-dot,
-.footer-divider,
-.copy-id {
-  display: none;
-}
+
 
 .footer-message,
 .footer-copyright {
@@ -1420,9 +1079,7 @@ button {
     height: 25px;
   }
 
-  .discord-panel {
-    padding: 15px;
-  }
+  
 
   .footer {
     font-size: 11px;
@@ -1447,34 +1104,22 @@ button {
 }
 
 /* Tieu de Discord */
-.panel-heading h2 {
-  font-size: 24px;
-}
+
 
 /* Ten Discord */
-.user-copy strong {
-  font-size: 19px;
-}
 
-.user-copy span {
-  font-size: 15px;
-}
 
-.user-copy small {
-  font-size: 13px;
-}
+
+
+
 
 /* Hoat dong Discord */
-.activity-copy strong {
-  font-size: 16px;
-}
 
-.activity-copy small {
-  font-size: 14px;
-}
+
+
 
 /* Trang thai va thong tin phu */
-.custom-status,
+
 .discord-foot {
   font-size: 14px;
 }
@@ -1491,121 +1136,10 @@ button {
 
   .profile-info .tagline {
     font-size: 17px;
-  }
-
-  .panel-heading h2 {
-    font-size: 21px;
-  }
-
-  .user-copy strong {
-    font-size: 17px;
-  }
-
-  .activity-copy strong {
-    font-size: 14px;
-  }
+  } 
 }
 /* VALORANT TRACKER */
 
-.valorant-panel {
-  margin-top: 22px;
-  padding: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 21px;
-  background: rgba(12, 12, 16, 0.82);
-}
-
-.valorant-mark {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: rgba(255, 70, 85, 0.14);
-  color: #ff4655;
-  font-size: 23px;
-  font-weight: 900;
-  font-style: italic;
-}
-
-.valorant-player {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  margin: 25px 0;
-}
-
-.valorant-player > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.valorant-player > div:first-child strong {
-  font-size: 23px;
-}
-
-.valorant-player > div:first-child span {
-  color: #92929e;
-  font-size: 13px;
-}
-
-.valorant-rank {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 5px;
-}
-
-.valorant-rank strong {
-  font-size: 30px;
-  color: #ff6673;
-}
-
-.valorant-rank small {
-  color: #777783;
-  font-size: 11px;
-}
-
-.valorant-tracker-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 18px;
-  padding: 13px;
-  border-radius: 10px;
-  background: rgba(255, 70, 85, 0.1);
-  color: #ff6875;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-decoration: none;
-  transition: 0.2s ease;
-}
-
-.valorant-tracker-link:hover {
-  background: rgba(255, 70, 85, 0.2);
-  transform: translateY(-2px);
-}
-
-@media (max-width: 650px) {
-  .valorant-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .valorant-panel {
-    padding: 16px;
-  }
-}
-.vlr-logo {
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
-  display: block;
-  flex-shrink: 0;
-}
 /* Whole profile card - 3D rocking */
 .profile-card {
   transform-origin: center center;
@@ -1774,10 +1308,7 @@ body,
   z-index: 3;
 }
 /* Discord widget clock */
-.discord-panel {
-  position: relative;
-  padding-bottom: 42px;
-}
+
 
 .profile-location {
   display: flex;
@@ -1834,14 +1365,9 @@ body,
   }
 }
 /* Discord widget footer */
-.discord-panel {
-  position: relative;
-  padding-bottom: 20px;
-}
 
-.discord-panel .discord-user {
-  margin-top: 0;
-}
+
+
 
 .discord-foot {
   display: flex;
@@ -1849,7 +1375,7 @@ body,
   align-items: center;
   margin-top: 12px;
   color: #777;
-  font: 11px 'DM Mono', monospace;
+  font: 11px "DM Mono", monospace;
 }
 
 .widget-clock {
@@ -1884,12 +1410,9 @@ body,
 /* Giữ font DM Mono cho các thông tin kỹ thuật */
 .site-shell .topbar-right,
 .site-shell .handle,
-.site-shell .user-copy > span,
 .site-shell .discord-foot,
 .site-shell .widget-clock,
-.site-shell .eyebrow,
-.site-shell .footer,
-.site-shell .quote-credit {
+.site-shell .footer{
   font-family: "DM Mono", monospace;
   font-weight: 400;
 }
@@ -1926,10 +1449,7 @@ body,
 }
 
 /* Discord widget drops in second */
-.website-entered .discord-panel {
-  opacity: 0;
-  animation: dropIn 0.7s cubic-bezier(.22, .8, .25, 1) 0.75s both;
-}
+
 
 /* Social icons appear one by one */
 .website-entered .social-link {
@@ -2321,7 +1841,7 @@ body,
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 
   color: #888;
-  font: 11px 'DM Mono', monospace;
+  font: 11px "DM Mono", monospace;
 }
 
 .profile-card-foot .widget-clock {
@@ -2552,8 +2072,7 @@ canvas.cursor-effects {
   margin-top: 14px;
 }
 /* Các widget bên trong */
-.discord-panel,
-.quote-panel,
+
 .riot-id-card {
   width: 100%;
   max-width: 100%;
@@ -2574,8 +2093,7 @@ canvas.cursor-effects {
   }
 }
 
-/* ===== PROFILE CARD LAYOUT ===== *//* ===== PROFILE CARD LAYOUT ===== */
-
+/* ===== PROFILE CARD LAYOUT ===== */
 .hero {
   display: grid !important;
   grid-template-columns: 145px minmax(0, 1fr);
@@ -2687,21 +2205,10 @@ canvas.cursor-effects {
   }
 }
 /* ACTIVITY - FIXED BOTTOM RIGHT */
-.activity-box {
-  position: fixed !important;
-  right: 24px;
-  bottom: 24px;
-  z-index: 999;
-  width: 280px;
-  max-width: calc(100vw - 32px);
-}
+
 
 /* Ẩn Activity trên mobile */
-@media (max-width: 600px) {
-  .activity-box {
-    display: none !important;
-  }
-}
+
 /* ===== FLOATING ACTIVITY PILL ===== */
 
 .floating-activity {

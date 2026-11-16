@@ -1,19 +1,11 @@
 import { createPortal } from "react-dom";
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  Activity,
-  ArrowUpRight,
   Check,
   Circle,
-  Copy,
   Gamepad2,
   MapPin,
-  Music2,
-  Radio,
   Sparkles,
-  Instagram,
-  Disc3,
-  MessageCircle,
   Volume2,
   VolumeX
 } from "lucide-react";
@@ -25,13 +17,6 @@ import {
 } from "simple-icons";
 import { config } from "./config";
 import { useLanyard } from "./useLanyard";
-
-const statusMap = {
-  online: { label: "online", color: "#5de0a0" },
-  idle: { label: "idle", color: "#f5c451" },
-  dnd: { label: "do not disturb", color: "#f16b76" },
-  offline: { label: "offline", color: "#777783" }
-};
 
 const socialIcons = {
   Instagram: siInstagram,
@@ -67,7 +52,7 @@ function ProfileCardFooter({ presence }) {
   return (
     <div className="discord-foot profile-card-foot">
       <span className="widget-clock">
-        {formattedTime} GMT+7
+        {formattedTime} 
       </span>
 
       <span>{device}</span>
@@ -395,7 +380,7 @@ function FloatingActivity({ presence }) {
     (item) => item.type !== 4 && item.name !== "Spotify"
   );
 
-  if (!spotify && !activity) return null;  if (!spotify && !activity) return null;
+  if (!spotify && !activity) return null;
   const handleActivityMove = (e) => {
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -452,7 +437,7 @@ function FloatingActivity({ presence }) {
 }
 function App() {
   // Discord data
-  const { data, connection } = useLanyard(config.discordUserId);
+  const { data } = useLanyard(config.discordUserId);
 
   // Refs
   const musicRef = useRef(null);
@@ -460,7 +445,6 @@ function App() {
 
   // States
   const [isPlaying, setIsPlaying] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [copiedRiot, setCopiedRiot] = useState(false);
 
   // Discord avatar decoration
@@ -529,26 +513,17 @@ const enterWebsite = () => {
   window.setTimeout(() => {
     setIntroVisible(false);
   }, 1000);
-};  const [now] = useState(() => new Date());
+};  const [now, setNow] = useState(() => new Date());
 
-  const time = useMemo(
-    () =>
-      now.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit"
-      }),
-    [now]
-  );
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
-  const copyId = async () => {
-    try {
-      await navigator.clipboard.writeText(config.discordUserId);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch (error) {
-      console.error("Cannot copy Discord ID:", error);
-    }
-  };
+  const time = now.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 
   return (
   <>
@@ -622,7 +597,7 @@ const enterWebsite = () => {
 
           <div className="topbar-right">
             <span className="local-time">
-              <Circle size={7} fill="currentColor" /> {time} GMT+7
+              <Circle size={7} fill="currentColor" /> {time} 
             </span>
             <span className="topbar-line" />
             <span className="topbar-label">PERSONAL WEBSITE</span>
