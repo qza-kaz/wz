@@ -4,9 +4,8 @@ export const config = {
   tagline: "",
   location: "Ho Chi Minh City, Viet Nam",
 
-  avatarUrl:
-    "https://cdn.discordapp.com/attachments/948599842056327181/1568135923550519367/8DE35A6B-21A8-45E0-8EE4-2519ABC64455.jpg?ex=6aeeb7e2&is=6aed6662&hm=84d5f09a86ca4ceba3129e7eba863a269039c85d9d90796c5563fd0038101359",
-  coverUrl: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1800&q=85",
+  avatarUrl: "/avatar.jpg",
+     coverUrl: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1800&q=85",
 
   discordUserId: "905025054599962635",
 
